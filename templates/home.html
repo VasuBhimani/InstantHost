@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" href="./../static/style_login.css" />
+</head>
+<body>
+    <h1>Welcome, {{ user }}!</h1>
+    <a href="{{ url_for('auth.logout') }}">Logout</a>
+</body>
+</html>

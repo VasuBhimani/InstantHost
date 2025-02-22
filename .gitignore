@@ -1,0 +1,10 @@
+download/*
+!download/
+requirements
+dockerfile_info.txt
+docker.py
+test.py
+functions/*
+!functions/
+test2.py
+testfolder

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Responsive Header</title>
+    <link rel="stylesheet" href="../static/style_header.css" />
+  </head>
+  <body>
+    <div class="header">
+      <div class="left">
+        <button onclick="goBack()">Back</button>
+        <button onclick="goHome()">Home</button>
+      </div>
+      <div class="user-info">Welcome, <span id="username">User</span></div>
+      <div class="right">
+        <button onclick="logout()" id="logout_button">Logout</button>
+      </div>
+    </div>
+
+    <script>
+      // Function to go back
+      function goBack() {
+        window.history.back();
+      }
+
+      // Function to go to home page
+      function goHome() {
+        window.location.href = "/"; // Change '/' to your home page URL
+      }
+
+      // Function to logout
+      function logout() {
+        alert("Logging out...");
+        window.location.href = "/login"; // Redirect to login page
+      }
+
+      // Simulating user name (replace with actual user data fetching)
+      document.getElementById("username").innerText = "John Doe"; // Replace dynamically
+    </script>
+  </body>
+</html>

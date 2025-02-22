@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <script>
+    // Periodically check the task status
+    function checkStatus() {
+      fetch("/status")
+        .then((response) => {
+          if (response.redirected) {
+            // Redirect to the next page if the task is done
+            window.location.href = response.url;
+          }
+        })
+        .catch((err) => console.error("Error checking status:", err));
+    }
+
+    // Check the status every 1 second
+    setInterval(checkStatus, 500);
+  </script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cosmic Loading Screen</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: radial-gradient(circle, #0d1b2a, #1b263b, #000000);
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: white;
+        font-family: Arial, sans-serif;
+      }
+
+      .galaxy-container {
+        position: relative;
+        width: 300px;
+        height: 300px;
+      }
+
+      .galaxy {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.5) 20%,
+          transparent 70%
+        );
+        animation: spin 12s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .star {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        background: white;
+        border-radius: 50%;
+        animation: twinkle 2s infinite alternate ease-in-out;
+      }
+
+      @keyframes twinkle {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0.3;
+        }
+      }
+
+      .planet {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #ff7f50, #ff4500);
+        animation: orbit 8s linear infinite, pulse 2s infinite alternate;
+      }
+
+      @keyframes orbit {
+        0% {
+          transform: rotate(0deg) translateX(130px) rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg) translateX(130px) rotate(-360deg);
+        }
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        100% {
+          transform: scale(1.2);
+        }
+      }
+
+      .comet {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: linear-gradient(45deg, #f5a623, #ff4500);
+        border-radius: 50%;
+        animation: orbit 6s ease-in-out infinite, trail 6s ease-in-out infinite;
+      }
+
+      @keyframes trail {
+        0% {
+          box-shadow: 0 0 10px #ff4500, 0 0 20px #f5a623;
+        }
+        100% {
+          box-shadow: 0 0 5px #ff4500, 0 0 10px #f5a623;
+        }
+      }
+
+      .nebula {
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 0, 150, 0.2) 20%,
+          transparent 80%
+        );
+        animation: fade 6s linear infinite alternate;
+      }
+
+      @keyframes fade {
+        0% {
+          opacity: 0.2;
+        }
+        100% {
+          opacity: 0.5;
+        }
+      }
+
+      .shooting-star {
+        position: absolute;
+        width: 5px;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, white, transparent);
+        animation: shoot 3s infinite;
+      }
+
+      @keyframes shoot {
+        0% {
+          transform: translate(-50px, -50px) rotate(45deg);
+          opacity: 0;
+        }
+        50% {
+          transform: translate(300px, 300px) rotate(45deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(600px, 600px) rotate(45deg);
+          opacity: 0;
+        }
+      }
+
+      .progress {
+        position: absolute;
+        bottom: -40px;
+        width: 100%;
+        text-align: center;
+        font-size: 14px;
+        animation: fadeIn 2s infinite alternate;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0.5;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .galaxy:hover {
+        box-shadow: 0 0 20px #f5a623, 0 0 40px #ff4500;
+        transition: box-shadow 0.3s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="galaxy-container">
+      <div class="nebula"></div>
+      <div class="galaxy">
+        <!-- Stars -->
+        <div class="star" style="top: 10%; left: 50%"></div>
+        <div class="star" style="top: 30%; left: 20%"></div>
+        <div class="star" style="top: 50%; left: 80%"></div>
+        <div class="star" style="top: 70%; left: 40%"></div>
+        <div class="star" style="top: 90%; left: 60%"></div>
+
+        <!-- Comet -->
+        <div class="comet"></div>
+
+        <!-- Planet -->
+        <div class="planet"></div>
+      </div>
+
+      <!-- Shooting Star -->
+      <div class="shooting-star"></div>
+    </div>
+    <div class="progress">Loading the universe...</div>
+  </body>
+</html>

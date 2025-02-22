@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dockerfile Generator</title>
+    <link rel="stylesheet" href="./../static/style.css" />
+    <script>
+      function addEnvVar() {
+        const container = document.getElementById("env_vars_container");
+        const newDiv = document.createElement("div");
+        newDiv.classList.add("env-var-input");
+
+        newDiv.innerHTML = `
+                <label for="env_var_key">Key:</label>
+                <input type="text" name="env_var_key[]" required class="input-field">
+                <label for="env_var_value">Value:</label>
+                <input type="text" name="env_var_value[]" required class="input-field">
+                <button type="button" onclick="removeEnvVar(this)" class="remove-button">Remove</button>
+            `;
+        container.appendChild(newDiv);
+      }
+
+      function removeEnvVar(button) {
+        button.parentElement.remove();
+      }
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      
+      <p>{{ repo_name or 'No repository provided' }}</p>
+
+      <h1 class="heading"> Enter Your {{ project_name }} Project details </h1>
+      <!-- <form method="POST" class="docker-form"> -->
+        <!-- <form method="POST" class="docker-form" action="/submit" class="mt-4"> -->
+          <form method="POST" class="docker-form" action="/submit">
+
+        <div class="form-group">
+          <label for="build_commands">Build Commands:</label>
+          <input
+            type="text"
+            id="build_commands"
+            name="build_commands"
+            required
+            class="input-field"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="ports">Ports (e.g., 5000, 8080):</label>
+          <input
+            type="text"
+            id="ports"
+            name="ports"
+            required
+            class="input-field"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="env_vars">Environment Variables (Key-Value pairs):</label>
+          <div id="env_vars_container" class="env-vars-container">
+            <div class="env-var-input">
+              <label for="env_var_key">Key:</label>
+              <input
+                type="text"
+                name="env_var_key[]"
+                required
+                class="input-field"
+              />
+              <label for="env_var_value">Value:</label>
+              <input
+                type="text"
+                name="env_var_value[]"
+                required
+                class="input-field"
+              />
+              <button
+                type="button"
+                onclick="removeEnvVar(this)"
+                class="remove-button"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+          <button type="button" onclick="addEnvVar()" class="add-button">
+            Add Another Environment Variable
+          </button>
+        </div>
+
+        <button type="submit" class="submit-button">
+          Generate Dockerfile Info
+        </button>
+      </form>
+    </div>
+  </body>
+</html>

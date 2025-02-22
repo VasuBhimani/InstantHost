@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Signup</title>
+    <link rel="stylesheet" href="./../static/style_login.css" />
+    <script>
+        function togglePassword(fieldId, eyeIconId) {
+            var field = document.getElementById(fieldId);
+            var eyeIcon = document.getElementById(eyeIconId);
+            if (field.type === "password") {
+                field.type = "text";
+                eyeIcon.textContent = "👁️"; // Open eye symbol
+            } else {
+                field.type = "password";
+                eyeIcon.textContent = "🙈"; // Closed eye symbol
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Signup</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <p class="{{ category }}">{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+        <label>Username:</label><br />
+        <input type="text" name="username" required /><br />
+
+        <label>Password:</label><br />
+        <input type="password" name="password" id="password" required />
+        <span id="togglePassword" onclick="togglePassword('password', 'togglePassword')" style="cursor: pointer;">👁️</span>
+        <br />
+
+        <label>AWS Secret Key:</label><br />
+        <input type="password" name="aws_secret_key" id="aws_secret_key" required />
+        <span id="toggleAwsSecretKey" onclick="togglePassword('aws_secret_key', 'toggleAwsSecretKey')" style="cursor: pointer;">👁️</span>
+        <br />
+
+        <label>AWS Secret ID:</label><br />
+        <input type="password" name="aws_secret_id" id="aws_secret_id" required />
+        <span id="toggleAwsSecretId" onclick="togglePassword('aws_secret_id', 'toggleAwsSecretId')" style="cursor: pointer;">👁️</span>
+        <br />
+
+        <button type="submit">Signup</button>
+    </form>
+
+    <p>
+        Already have an account?
+        <a href="{{ url_for('auth.login') }}">Login here</a>.
+    </p>
+</body>
+</html>
