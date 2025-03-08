@@ -100,7 +100,7 @@ def testing_for_python(project_name, username):
     commands = [
         "terraform init ",
         "terraform plan",
-        "terraform apply terraform apply -var="ecr_repository_name=my-new-repo" -auto-approve"
+        "terraform apply -var=\"ecr_repository_name=my-new-repo\" -auto-approve"
     ]
 
     # Send each command to the tmux session

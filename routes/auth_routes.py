@@ -2,7 +2,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import mysql
 import os
-from utils.aws_secrets import aws_secrets_store
+from utils.aws_secrets import create_session
+import subprocess
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -15,7 +16,8 @@ def home():
 @auth_bp.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
-        aws_secrets_store("InstantHost",request.form["aws_secret_id"] ,request.form["aws_secret_key"])
+        aws_access_key = request.form["aws_secret_id"]
+        aws_secret_key = request.form["aws_secret_key"]
         username = request.form["username"]
         password = request.form["password"]
         password_hash = generate_password_hash(password)
@@ -27,17 +29,20 @@ def signup():
         if existing_user:
             flash("Username already exists!", "danger")
         else:
-            cur.execute("INSERT INTO users (username, password_hash) VALUES (%s, %s)", (username, password_hash))
-            mysql.connection.commit()
-            cur.close()
-            flash("Signup successful! Please log in.", "success")
+            # temp = create_session(username,aws_access_key,aws_secret_key)
+            if create_session(username,aws_access_key,aws_secret_key)
+                cur.execute("INSERT INTO users (username, password_hash) VALUES (%s, %s)", (username, password_hash))
+                mysql.connection.commit()
+                cur.close()
+                flash("Signup successful! Please log in.", "success")
+        
             return redirect(url_for("auth.login"))
 
     return render_template("signup.html")
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == "POST":
+    if request.method == "POST":``
         username = request.form["username"]
         password = request.form["password"]
         

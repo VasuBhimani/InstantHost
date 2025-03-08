@@ -8,3 +8,8 @@ functions/*
 !functions/
 test2.py
 testfolder
+script/ECR/*
+!script/ECR/main.tf
+!script/ECR/outputs.tf  
+!script/ECR/push_to_ecr.sh
+

@@ -22,8 +22,8 @@ data "aws_secretsmanager_secret_version" "aws_creds_version" {
 # Decode secret JSON and fetch credentials dynamically
 locals {
   secrets    = jsondecode(data.aws_secretsmanager_secret_version.aws_creds_version.secret_string)
-  access_key = lookup(local.secrets, var.access_key_name, "DEFAULT_ACCESS_KEY")
-  secret_key = lookup(local.secrets, var.secret_key_name, "DEFAULT_SECRET_KEY")
+  access_key = sensitive(lookup(local.secrets, var.access_key_name, "DEFAULT_ACCESS_KEY"))
+  secret_key = sensitive(lookup(local.secrets, var.secret_key_name, "DEFAULT_SECRET_KEY"))
 }
 
 # **Main AWS Provider** (Uses credentials from Secrets Manager)
@@ -62,6 +62,6 @@ output "ecr_repository_url" {
 }
 
 # terraform init
-# terraform apply -var="access_key_name=vasu-username" -var="secret_key_name=vasu-password" -var="ecr_repository_name=houseofit" -auto-approve
-# terraform destroy -var="access_key_name=vasu-username" -var="secret_key_name=vasu-password" -var="ecr_repository_name=houseofit" -auto-approve
+# terraform apply -var="access_key_name=vasu-username" -var="secret_key_name=vasu-password" -var="ecr_repository_name=houseofit" -auto-approve -backup=/dev/null
+# terraform destroy -var="access_key_name=vasu-username" -var="secret_key_name=vasu-password" -var="ecr_repository_name=houseofit" -auto-approve -backup=/dev/null
 

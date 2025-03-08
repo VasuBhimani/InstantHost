@@ -2,7 +2,43 @@
 import boto3
 import json
 from flask import session  # Import session to access stored variables
+import subprocess
 
+def create_session(username,aws_access_key,aws_secret_key):
+
+    session_name = username  # Use the username as the tmux session name
+    # Create a new tmux session in detached mode
+    tmux_cmd = f"tmux new-session -d -s {session_name}"
+    
+    # Command to configure AWS CLI inside the tmux session
+    aws_config_cmd = (
+        f"aws configure set aws_access_key_id {aws_access_key} && "
+        f"aws configure set aws_secret_access_key {aws_secret_key} && "
+        f"aws configure set region us-east-1 && "  # Change region if needed
+        f"aws configure list"
+    )
+
+    # Send the AWS configuration command to the tmux session
+    tmux_send_cmd = f'tmux send-keys -t {session_name} "{aws_config_cmd}" Enter'
+
+    try:
+        # Step 1: Create a tmux session
+        subprocess.run(tmux_cmd, shell=True, check=True)
+        
+        # Step 2: Run AWS CLI configure command inside the session
+        subprocess.run(tmux_send_cmd, shell=True, check=True)
+
+        return True
+    
+    except subprocess.CalledProcessError as e:
+        return f"Error: {e}"
+    
+    
+    
+
+    
+    
+    
 def aws_secrets_store(secret_name, username, password):
     client = boto3.client('secretsmanager', region_name='ap-south-1')
     
@@ -49,8 +85,6 @@ def aws_secrets_store(secret_name, username, password):
         return f"Error: {e}"
 
 
-# 
-print(aws_secrets_store("InstantHost", "john_doerrrr", "myp@ssword123"))
 
 
 def aws_secrets_get(secret_name, username):
