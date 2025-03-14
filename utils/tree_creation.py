@@ -3,6 +3,7 @@ import os
 from git import Repo
 import requests
 import json
+from flask import jsonify
 
 repo_name = None
 # Ensure the download directory exists
@@ -28,11 +29,11 @@ def generate_tree(root_path, level=0):
 # Function to check if the project is Python or MERN based on file tree
 def check_project_type(repo_path):
     if os.path.exists(os.path.join(repo_path, 'requirements.txt')):
-        return "Python"
+        return "PYTHON"
     elif os.path.exists(os.path.join(repo_path, 'package.json')):
-        return "Node"
+        return "MERN"
     else:
-        return "Python (Flask)"
+        return "not flask or node"
 
 # Function to save the file tree structure and project type
 def save_file_tree(repo_name, repo_path, username):

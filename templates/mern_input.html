@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Configuration</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
+    />
+    <style>
+      body {
+        background-color: #f4f4f9;
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        max-width: 700px;
+        background: white;
+        padding: 25px;
+        margin: 50px auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+      h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+      }
+      .form-label {
+        font-weight: bold;
+      }
+      .btn-primary {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        margin-top: 10px;
+      }
+      .folder,
+      .file-item {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 5px;
+      }
+      .folder:hover,
+      .file-item:hover {
+        background-color: #e9ecef;
+      }
+      .folder {
+        font-weight: bold;
+        background-color: #f8f9fa;
+        padding: 5px 10px;
+        border-radius: 5px;
+      }
+      .folder span {
+        margin-right: 10px;
+        transition: transform 0.2s ease-in-out;
+      }
+      .expanded span {
+        transform: rotate(90deg);
+      }
+      .hidden {
+        display: none;
+      }
+      .selected {
+        background-color: #d1ecf1;
+      }
+    </style>
+  </head>
+  <body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid">
+        <!-- Back Button -->
+        <button class="btn btn-secondary me-2" onclick="window.history.back();">
+          Back
+        </button>
+
+        <!-- Menu Button -->
+        <button class="btn btn-primary me-2" onclick="redirectToHome()">
+          Menu
+        </button>
+
+        <div class="ms-auto d-flex align-items-center">
+          <!-- Profile Name from Session -->
+          <span class="text-white me-3"
+            >Welcome, {{ session.get('user', 'Guest') }}</span
+          >
+
+          <!-- Logout Button -->
+          <a href="{{ url_for('auth.logout') }}" class="btn btn-danger"
+            >Logout</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- Optional: Add Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <script>
+      function toggleMenu() {
+        alert("Menu button clicked! Implement menu logic here.");
+      }
+
+      function redirectToHome() {
+        window.location.href = "/"; 
+      }
+    </script>
+    <!-- Upper Panel code ends  -->
+
+    <div class="container">
+      <h2>Enter Project Configuration</h2>
+      <form method="POST" action="/mern_submit" onsubmit="return validateForm()">
+        <h4 class="text-primary">Frontend Configuration</h4>
+        <label class="form-label">Frontend Port</label>
+        <input type="number" class="form-control" name="frontend_port" placeholder="3000" required />
+
+        <label class="form-label">Frontend Run Command</label>
+        <input type="text" class="form-control" name="frontend_command" placeholder="npm start or yarn dev" required />
+
+        <h4 class="text-success mt-4">Backend Configuration</h4>
+        <label class="form-label">Backend Port</label>
+        <input type="number" class="form-control" name="backend_port" placeholder="5000" required />
+
+        <label class="form-label">Backend Run Command</label>
+        <input type="text" class="form-control" name="backend_command" placeholder="node server.js or flask run" required />
+
+        <!-- First File Selection -->
+        <h4 class="text-info mt-4">Select First File</h4>
+        <ul id="fileList1"></ul>
+        <input type="hidden" name="selected_file_url_1" id="selectedFileInput1" required />
+
+        <!-- Second File Selection (Duplicate of the first) -->
+        <h4 class="text-info mt-4">Select Second File</h4>
+        <ul id="fileList2"></ul>
+        <input type="hidden" name="selected_file_url_2" id="selectedFileInput2" required />
+
+        <button type="submit" class="btn btn-primary">Submit Configuration</button>
+      </form>
+    </div>
+
+    <script>
+      let baseDir = ""; // Stores the root directory path
+
+      async function fetchFiles() {
+        const response = await fetch("/files");
+        const fileTree = await response.json();
+
+        baseDir = fileTree.base_path; // Store the base directory path
+
+        const fileList1 = document.getElementById("fileList1");
+        const fileList2 = document.getElementById("fileList2");
+
+        createFileSelection(fileTree, fileList1, "selectedFileInput1");
+        createFileSelection(fileTree, fileList2, "selectedFileInput2");
+      }
+
+      function createFileSelection(tree, parentElement, inputId) {
+        const rootItem = document.createElement("li");
+        rootItem.classList.add("folder");
+
+        const rootIcon = document.createElement("span");
+        rootIcon.textContent = "▶";
+        rootIcon.style.marginRight = "8px";
+
+        const rootSubList = document.createElement("ul");
+        rootSubList.classList.add("file-list", "hidden");
+
+        rootItem.onclick = (e) => {
+          e.stopPropagation();
+          rootSubList.classList.toggle("hidden");
+          rootIcon.textContent = rootSubList.classList.contains("hidden") ? "▶" : "▼";
+        };
+
+        rootItem.appendChild(rootIcon);
+        rootItem.appendChild(document.createTextNode(tree.name));
+
+        parentElement.appendChild(rootItem);
+        parentElement.appendChild(rootSubList);
+
+        displayTree(tree, rootSubList, inputId);
+      }
+
+      function displayTree(tree, parentElement, inputId) {
+        if (tree.files) {
+          tree.files.forEach((file) => {
+            const fileItem = document.createElement("li");
+            fileItem.classList.add("file-item");
+
+            const radio = document.createElement("input");
+            radio.type = "radio";
+            radio.name = inputId; // Make sure each file selection is separate
+            radio.value = file; // Store full file path
+
+            fileItem.onclick = (e) => {
+              e.stopPropagation();
+              radio.checked = true;
+              selectFile(fileItem, file, inputId);
+            };
+
+            fileItem.appendChild(radio);
+            fileItem.appendChild(document.createTextNode(file.split("/").pop()));
+
+            parentElement.appendChild(fileItem);
+          });
+        }
+
+        for (const key in tree.folders) {
+          const folder = tree.folders[key];
+
+          const folderItem = document.createElement("li");
+          folderItem.classList.add("folder");
+
+          const icon = document.createElement("span");
+          icon.textContent = "▶";
+          icon.style.marginRight = "8px";
+
+          const subList = document.createElement("ul");
+          subList.classList.add("file-list", "hidden");
+
+          folderItem.onclick = (e) => {
+            e.stopPropagation();
+            subList.classList.toggle("hidden");
+            icon.textContent = subList.classList.contains("hidden") ? "▶" : "▼";
+          };
+
+          folderItem.appendChild(icon);
+          folderItem.appendChild(document.createTextNode(folder.name));
+
+          parentElement.appendChild(folderItem);
+          parentElement.appendChild(subList);
+          displayTree(folder, subList, inputId);
+        }
+      }
+
+      function selectFile(fileItem, filePath, inputId) {
+        document.querySelectorAll(`#${inputId} ~ ul .selected`).forEach((el) => el.classList.remove("selected"));
+        fileItem.classList.add("selected");
+        document.getElementById(inputId).value = filePath;
+      }
+
+      function validateForm() {
+        if (!document.getElementById("selectedFileInput1").value) {
+          alert("Please select the first file before submitting.");
+          return false;
+        }
+        if (!document.getElementById("selectedFileInput2").value) {
+          alert("Please select the second file before submitting.");
+          return false;
+        }
+        return true;
+      }
+
+      fetchFiles();
+    </script>
+  </body>
+</html>

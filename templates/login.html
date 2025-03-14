@@ -1,24 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
-    <link rel="stylesheet" href="./../static/style_login.css" />
+    <link rel="stylesheet" href="style_login.css" />
   </head>
   <body>
-    <h1>Login</h1>
-    {% with messages = get_flashed_messages(with_categories=true) %} {% for
-    category, message in messages %}
-    <p class="{{ category }}">{{ message }}</p>
-    {% endfor %} {% endwith %}
-    <form method="POST">
-      <label>Username:</label><br />
-      <input type="text" name="username" required /><br />
-      <label>Password:</label><br />
-      <input type="password" name="password" required /><br />
-      <button type="submit">Login</button>
-    </form>
-    <p>
-      Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign up here</a>.
-    </p>
+    <div class="background-overlay"></div>
+    <!-- Soft background overlay -->
+
+    <div class="login-container">
+      <h1 class="title">Login</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %} {% for
+      category, message in messages %}
+      <p class="{{ category }}">{{ message }}</p>
+      {% endfor %} {% endwith %}
+
+      <form method="POST" id="loginForm">
+        <label>Username</label>
+        <input type="text" name="username" required />
+
+        <label>Password</label>
+        <input type="password" name="password" required />
+
+        <button type="submit" class="login-btn">Login</button>
+      </form>
+
+      <p class="signup-text">
+        Don't have an account?
+        <a href="{{ url_for('auth.signup') }}">Sign up here</a>.
+      </p>
+    </div>
+
+    <script src="script.js"></script>
   </body>
+  <style>
+    /* Import Font */
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap");
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #1b1b1b, #222831);
+      color: #e0e0e0;
+      overflow: hidden;
+    }
+
+    /* Soft Background Overlay */
+    .background-overlay {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      z-index: -1;
+    }
+
+    /* Login Container */
+    .login-container {
+      background: rgba(50, 50, 50, 0.3);
+      padding: 40px;
+      border-radius: 12px;
+      text-align: center;
+      width: 350px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.05);
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    /* Title */
+    .title {
+      font-size: 1.8em;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #f2f2f2;
+    }
+
+    /* Form Elements */
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-size: 1em;
+      text-align: left;
+      margin-bottom: 5px;
+      color: #c4c4c4;
+    }
+
+    input {
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 1em;
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      transition: 0.3s ease-in-out;
+    }
+
+    input:focus {
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0px 0px 8px rgba(255, 255, 255, 0.15);
+    }
+
+    /* Login Button */
+    .login-btn {
+      background: #3f72af;
+      color: white;
+      border: none;
+      padding: 12px;
+      font-size: 1em;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .login-btn:hover {
+      background: #2c5aa0;
+      box-shadow: 0px 0px 8px rgba(63, 114, 175, 0.5);
+      transform: translateY(-2px);
+    }
+
+    /* Signup Text */
+    .signup-text {
+      font-size: 0.9em;
+      margin-top: 15px;
+    }
+
+    .signup-text a {
+      color: #76a9fa;
+      text-decoration: none;
+    }
+
+    .signup-text a:hover {
+      text-decoration: underline;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const form = document.getElementById("loginForm");
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        let username = document.querySelector("input[name='username']").value;
+        let password = document.querySelector("input[name='password']").value;
+
+        if (username === "" || password === "") {
+          showErrorAnimation(form);
+        } else {
+          form.classList.add("fade-out");
+          setTimeout(() => form.submit(), 500);
+        }
+      });
+
+      function showErrorAnimation(form) {
+        form.classList.add("shake");
+        setTimeout(() => form.classList.remove("shake"), 500);
+      }
+    });
+
+    /* Smooth Fade-out Effect */
+    document
+      .getElementById("loginForm")
+      .addEventListener("submit", function () {
+        this.classList.add("fade-out");
+      });
+
+    /* Shake Animation for Errors */
+    const style = document.createElement("style");
+    style.innerHTML = `
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        50% { transform: translateX(5px); }
+        75% { transform: translateX(-5px); }
+    }
+    .shake {
+        animation: shake 0.5s ease-in-out;
+    }
+    .fade-out {
+        animation: fadeOut 0.5s ease-in-out forwards;
+    }
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+`;
+    document.head.appendChild(style);
+  </script>
 </html>

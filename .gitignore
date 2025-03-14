@@ -7,9 +7,11 @@ test.py
 functions/*
 !functions/
 test2.py
+test3.py
+test.html
+input.txt
 testfolder
 script/ECR/*
 !script/ECR/main.tf
 !script/ECR/outputs.tf  
 !script/ECR/push_to_ecr.sh
-

@@ -11,8 +11,26 @@ def edit_folder(folder_name):
     if "user" not in session:
         flash("Please log in first.", "warning")
         return redirect(url_for("login"))
+
     session['project_name'] = folder_name
-    # Render a new page for editing
+    user_folder = os.path.join("download", session["user"], folder_name, f"{folder_name}_structure.txt")
+    
+    try:
+        with open(user_folder, 'r') as file:
+            first_line = file.readline().strip()
+            print(first_line)
+        if first_line == "Project Type: PYTHON":
+            return render_template("flask_input.html", folder_name=folder_name)
+        elif first_line == "Project Type: MERN":
+            return render_template("mern_input.html", folder_name=folder_name)
+        else:
+            return "Unknown Project Type", 400
+    
+    except FileNotFoundError:
+        return "File not found", 404
+    except Exception as e:
+        return f"An error occurred: {e}", 500
+    
     return render_template("projectinfo.html", folder_name=folder_name)
 
 @folder_bp.route("/folder_disply")

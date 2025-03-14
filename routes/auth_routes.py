@@ -30,7 +30,7 @@ def signup():
             flash("Username already exists!", "danger")
         else:
             # temp = create_session(username,aws_access_key,aws_secret_key)
-            if create_session(username,aws_access_key,aws_secret_key)
+            if create_session(username,aws_access_key,aws_secret_key):
                 cur.execute("INSERT INTO users (username, password_hash) VALUES (%s, %s)", (username, password_hash))
                 mysql.connection.commit()
                 cur.close()
@@ -42,7 +42,7 @@ def signup():
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == "POST":``
+    if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
         
