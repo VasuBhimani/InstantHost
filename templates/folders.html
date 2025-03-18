@@ -86,7 +86,14 @@
         >
           <span>{{ folder }}</span>
           <div>
-            <!-- Correct URL for edit folder -->
+            <!-- New combined Edit & Delete button redirecting to flask_v1 -->
+            <a
+              href="{{ url_for('flask_v1_bp.flask_v1', folder_name=folder) }}"
+              class="btn btn-info btn-sm me-2"
+              >Edit & Delete</a
+            >
+            
+            <!-- Existing Edit button -->
             <a
               href="{{ url_for('folder.edit_folder', folder_name=folder) }}"
               class="btn btn-warning btn-sm me-2"

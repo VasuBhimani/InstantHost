@@ -70,3 +70,5 @@ def delete_folder(folder_name):
         flash(f"Folder '{folder_name}' does not exist.", "warning")
 
     return redirect(url_for("folder.folder_disply")) 
+
+

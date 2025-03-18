@@ -39,11 +39,10 @@ def mern_submit():
             file.write(f"Backend Command: {backend_command}\n")
             
             
-        print("Node project docker file creation started")
+        print("MERN project docker file creation started")
         thread = threading.Thread(target=testing_for_node, args=(project_name, username))
         thread.start()
         return render_template("loading.html")
-
 
 
 @docker_bp.route("/flask_submit", methods=["GET", "POST"])
@@ -82,55 +81,7 @@ def flask_submit():
         
         
 
-@docker_bp.route("/submit", methods=["GET", "POST"])
-def submit():
-    print("hellllllll")
-    project_name = session.get('project_name')
-    username = session.get("user")
-    
-    if not project_name or not username:
-        flash("Project or user not found!", "danger")
-        return redirect(url_for("auth.login"))
 
-    if request.method == "POST":
-        build_commands = request.form["build_commands"]
-        ports = request.form["ports"]
-        env_var_keys = request.form.getlist("env_var_key[]")
-        env_var_values = request.form.getlist("env_var_value[]")
-        env_vars = dict(zip(env_var_keys, env_var_values)) 
-
-        folder_path = os.path.join("download", username, project_name)
-        file_path = os.path.join(folder_path, "dockerfile_info.txt")
-
-        with open(file_path, "w") as file:
-            file.write(f"Build Commands: {build_commands}\n")
-            file.write(f"Ports: {ports}\n")
-            file.write(f"Environment Variables: {env_vars}\n")
-        
-        
-        if(session.get("project_type") == "Python"):
-            # Start the Dockerfile creation and image build process in a separate thread
-            print("Python project docker file creation started")
-            thread = threading.Thread(target=testing_for_python, args=(project_name, username))
-            thread.start()
-            
-            return render_template("loading.html")
-        
-        
-        if(session.get("project_type") == "Node"):
-            # Start the Dockerfile creation and image build process in a separate thread
-            print("Node project docker file creation started")
-            thread = threading.Thread(target=testing_for_node, args=(project_name, username))
-            thread.start()
-            
-            return render_template("loading.html")
-        
-        # thread = threading.Thread(target=testing_for_mern, args=(project_name, username), daemon=True)
-        # thread.start()
-        
-        return render_template("loading.html")
-
-    return render_template("projectinfo.html")
 
 extra_text = "Create a production-ready Dockerfile for this project structure using best practices. Do not add markdown formatting, backticks, or explanations—just return the Dockerfile content as plain text."
 
@@ -193,3 +144,56 @@ def status():
 @docker_bp.route("/test")
 def test():
     return render_template("home.html")
+
+
+#--------------------------------------------------unnecessary code--------------------------------------------
+
+# @docker_bp.route("/submit", methods=["GET", "POST"])
+# def submit():
+#     print("hellllllll")
+#     project_name = session.get('project_name')
+#     username = session.get("user")
+    
+#     if not project_name or not username:
+#         flash("Project or user not found!", "danger")
+#         return redirect(url_for("auth.login"))
+
+#     if request.method == "POST":
+#         build_commands = request.form["build_commands"]
+#         ports = request.form["ports"]
+#         env_var_keys = request.form.getlist("env_var_key[]")
+#         env_var_values = request.form.getlist("env_var_value[]")
+#         env_vars = dict(zip(env_var_keys, env_var_values)) 
+
+#         folder_path = os.path.join("download", username, project_name)
+#         file_path = os.path.join(folder_path, "dockerfile_info.txt")
+
+#         with open(file_path, "w") as file:
+#             file.write(f"Build Commands: {build_commands}\n")
+#             file.write(f"Ports: {ports}\n")
+#             file.write(f"Environment Variables: {env_vars}\n")
+        
+        
+#         if(session.get("project_type") == "Python"):
+#             # Start the Dockerfile creation and image build process in a separate thread
+#             print("Python project docker file creation started")
+#             thread = threading.Thread(target=testing_for_python, args=(project_name, username))
+#             thread.start()
+            
+#             return render_template("loading.html")
+        
+        
+#         if(session.get("project_type") == "Node"):
+#             # Start the Dockerfile creation and image build process in a separate thread
+#             print("Node project docker file creation started")
+#             thread = threading.Thread(target=testing_for_node, args=(project_name, username))
+#             thread.start()
+            
+#             return render_template("loading.html")
+        
+#         # thread = threading.Thread(target=testing_for_mern, args=(project_name, username), daemon=True)
+#         # thread.start()
+        
+#         return render_template("loading.html")
+
+#     return render_template("projectinfo.html")
