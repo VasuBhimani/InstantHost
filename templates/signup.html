@@ -1,56 +1,874 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <title>Signup</title>
-    <link rel="stylesheet" href="./../static/style_login.css" />
-    <script>
-        function togglePassword(fieldId, eyeIconId) {
-            var field = document.getElementById(fieldId);
-            var eyeIcon = document.getElementById(eyeIconId);
-            if (field.type === "password") {
-                field.type = "text";
-                eyeIcon.textContent = "👁️"; // Open eye symbol
-            } else {
-                field.type = "password";
-                eyeIcon.textContent = "🙈"; // Closed eye symbol
-            }
+  <head>
+    <title>DevOps Automation Portal</title>
+    <style>
+      /* Modern base styles */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", "Segoe UI", "Roboto", sans-serif;
+      }
+
+      :root {
+        --primary: #3498db;
+        --primary-dark: #2980b9;
+        --secondary: #2ecc71;
+        --secondary-dark: #27ae60;
+        --accent: #9b59b6;
+        --dark: #1a1a2e;
+        --darker: #16213e;
+        --darkest: #0f3460;
+        --light: #ecf0f1;
+        --danger: #e74c3c;
+        --warning: #f39c12;
+        --gray: #7f8c8d;
+        --success: #2ecc71;
+      }
+
+      body,
+      html {
+        height: 100%;
+        width: 100%;
+        overflow-x: hidden;
+        background: var(--darker);
+        color: var(--light);
+        position: relative;
+      }
+
+      /* Background grid pattern */
+      .grid-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: linear-gradient(
+            rgba(22, 33, 62, 0.7) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(22, 33, 62, 0.7) 1px, transparent 1px);
+        background-size: 30px 30px;
+        z-index: -1;
+      }
+
+      /* Content container */
+      .container {
+        position: relative;
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 40px 30px;
+        backdrop-filter: blur(5px);
+        border-radius: 12px;
+        background-color: rgba(15, 52, 96, 0.7);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1),
+          0 0 0 1px rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        z-index: 10;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 2.2rem;
+        margin-bottom: 25px;
+        color: var(--light);
+        font-weight: 600;
+        letter-spacing: 0.5px;
+      }
+
+      form {
+        margin-top: 30px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      input {
+        width: 100%;
+        padding: 14px 16px;
+        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: var(--light);
+        font-size: 0.95rem;
+        outline: none;
+        transition: all 0.3s ease;
+      }
+
+      input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      button {
+        width: 100%;
+        padding: 14px;
+        margin-top: 10px;
+        border-radius: 8px;
+        border: none;
+        background: var(--primary);
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      button:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+      }
+
+      button::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        bottom: -50%;
+        left: -50%;
+        background: linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0),
+          rgba(255, 255, 255, 0.2) 50%,
+          rgba(255, 255, 255, 0)
+        );
+        transform: rotate(30deg) translate(-100%, 0);
+        animation: shimmer 3s infinite;
+      }
+
+      p {
+        text-align: center;
+        margin-top: 20px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      a:hover {
+        color: #56b8ff;
+        text-decoration: underline;
+      }
+
+      .flash {
+        padding: 12px 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 0.95rem;
+      }
+
+      .error {
+        background: rgba(231, 76, 60, 0.2);
+        border: 1px solid rgba(231, 76, 60, 0.3);
+        color: #ff9f95;
+      }
+
+      .success {
+        background: rgba(46, 204, 113, 0.2);
+        border: 1px solid rgba(46, 204, 113, 0.3);
+        color: #a7f3c1;
+      }
+
+      /* Password toggle styling */
+      .password-container {
+        position: relative;
+      }
+
+      .toggle-password {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.5);
+        user-select: none;
+        z-index: 2;
+        transition: color 0.3s ease;
+      }
+
+      .toggle-password:hover {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      /* CI/CD Pipeline Visualization */
+      .pipeline-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        overflow: hidden;
+      }
+
+      .pipeline {
+        position: absolute;
+        top: 20%;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background-color: rgba(52, 152, 219, 0.2);
+      }
+
+      .pipeline::before {
+        content: "";
+        position: absolute;
+        top: -3px;
+        left: 0;
+        width: 100%;
+        height: 10px;
+        background: repeating-linear-gradient(
+          90deg,
+          transparent,
+          transparent 20px,
+          rgba(52, 152, 219, 0.5) 20px,
+          rgba(52, 152, 219, 0.5) 30px
+        );
+        animation: flowPipeline 3s linear infinite;
+      }
+
+      .node {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        top: -8px;
+        background-color: var(--primary);
+        box-shadow: 0 0 10px rgba(52, 152, 219, 0.8);
+        z-index: 1;
+      }
+
+      .node-1 {
+        left: 15%;
+        animation: pulseNode 2s infinite alternate;
+      }
+      .node-2 {
+        left: 40%;
+        animation: pulseNode 2s infinite 0.5s alternate;
+      }
+      .node-3 {
+        left: 65%;
+        animation: pulseNode 2s infinite 1s alternate;
+      }
+      .node-4 {
+        left: 85%;
+        animation: pulseNode 2s infinite 1.5s alternate;
+      }
+
+      .node-label {
+        position: absolute;
+        top: -35px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        white-space: nowrap;
+      }
+
+      /* Cloud Computing Elements */
+      .cloud-container {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+      }
+
+      .cloud {
+        position: absolute;
+        border-radius: 10px;
+        background-color: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .cloud::after {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          135deg,
+          rgba(52, 152, 219, 0.1),
+          rgba(46, 204, 113, 0.1),
+          rgba(155, 89, 182, 0.1)
+        );
+        opacity: 0.4;
+      }
+
+      .cloud-1 {
+        width: 180px;
+        height: 100px;
+        top: 15%;
+        left: 10%;
+        transform: rotate(-10deg);
+      }
+
+      .cloud-2 {
+        width: 150px;
+        height: 80px;
+        bottom: 20%;
+        right: 8%;
+        transform: rotate(5deg);
+      }
+
+      .cloud-3 {
+        width: 100px;
+        height: 100px;
+        top: 60%;
+        left: 5%;
+        transform: rotate(10deg);
+      }
+
+      .cloud-icon {
+        font-size: 24px;
+        color: rgba(255, 255, 255, 0.2);
+        z-index: 1;
+      }
+
+      /* Data Streams */
+      .data-stream {
+        position: absolute;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          rgba(46, 204, 113, 0.2),
+          rgba(52, 152, 219, 0.5),
+          rgba(155, 89, 182, 0.2)
+        );
+        animation: dataFlow 4s linear infinite;
+      }
+
+      .data-stream-1 {
+        top: 35%;
+        left: 20%;
+        width: 25%;
+        transform: rotate(25deg);
+        animation-delay: 0.5s;
+      }
+
+      .data-stream-2 {
+        top: 70%;
+        left: 45%;
+        width: 30%;
+        transform: rotate(-15deg);
+        animation-delay: 1s;
+      }
+
+      .data-stream-3 {
+        top: 25%;
+        right: 15%;
+        width: 20%;
+        transform: rotate(-35deg);
+        animation-delay: 0s;
+      }
+
+      /* Code Blocks */
+      .code-block {
+        position: absolute;
+        width: 120px;
+        height: 80px;
+        background-color: rgba(15, 52, 96, 0.5);
+        border: 1px solid rgba(52, 152, 219, 0.3);
+        border-radius: 6px;
+        overflow: hidden;
+        padding: 10px;
+        font-family: "Courier New", monospace;
+        font-size: 8px;
+        color: rgba(46, 204, 113, 0.8);
+        animation: codeTyping 8s linear infinite;
+      }
+
+      .code-block::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 100%;
+        background-color: var(--secondary);
+        opacity: 0.5;
+      }
+
+      .code-block-1 {
+        top: 10%;
+        right: 15%;
+      }
+
+      .code-block-2 {
+        bottom: 15%;
+        left: 20%;
+      }
+
+      /* Deployment Animation */
+      .deployment {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        background-color: rgba(52, 152, 219, 0.1);
+        border: 1px solid rgba(52, 152, 219, 0.2);
+        border-radius: 8px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        animation: deploy 10s linear infinite;
+      }
+
+      .deployment::after {
+        content: "📦";
+        font-size: 16px;
+      }
+
+      .deployment-1 {
+        top: 30%;
+        left: 30%;
+        animation-delay: 0s;
+      }
+
+      .deployment-2 {
+        top: 60%;
+        right: 25%;
+        animation-delay: 5s;
+      }
+
+      /* Server Racks */
+      .server {
+        position: absolute;
+        width: 60px;
+        height: 90px;
+        background-color: rgba(15, 52, 96, 0.7);
+        border: 1px solid rgba(52, 152, 219, 0.3);
+        border-radius: 4px;
+        display: flex;
+        flex-direction: column;
+        padding: 2px;
+        overflow: hidden;
+      }
+
+      .server-unit {
+        height: 12px;
+        margin: 2px 0;
+        background-color: rgba(52, 152, 219, 0.2);
+        border-radius: 2px;
+        position: relative;
+      }
+
+      .server-unit::after {
+        content: "";
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background-color: rgba(46, 204, 113, 0.5);
+        animation: serverLight 2s infinite alternate;
+      }
+
+      .server-1 {
+        bottom: 10%;
+        right: 10%;
+      }
+
+      /* Particles */
+      .particles-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: -1;
+      }
+
+      .particle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        animation: floatParticle 15s linear infinite;
+      }
+
+      /* Animations */
+      @keyframes flowPipeline {
+        0% {
+          background-position: 0 0;
         }
+        100% {
+          background-position: 50px 0;
+        }
+      }
+
+      @keyframes pulseNode {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 10px rgba(52, 152, 219, 0.8);
+        }
+        50% {
+          transform: scale(1.2);
+          box-shadow: 0 0 15px rgba(52, 152, 219, 1);
+        }
+      }
+
+      @keyframes dataFlow {
+        0% {
+          background-position: 0 0;
+        }
+        100% {
+          background-position: 50px 0;
+        }
+      }
+
+      @keyframes shimmer {
+        0% {
+          transform: rotate(30deg) translate(-100%, 0);
+        }
+        100% {
+          transform: rotate(30deg) translate(100%, 0);
+        }
+      }
+
+      @keyframes codeTyping {
+        0%,
+        100% {
+          opacity: 0.6;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      @keyframes deploy {
+        0% {
+          transform: scale(0.8) translateY(0);
+          opacity: 0;
+        }
+        10% {
+          transform: scale(1) translateY(0);
+          opacity: 1;
+        }
+        90% {
+          transform: scale(1) translateY(calc(70vh - 40px));
+          opacity: 1;
+        }
+        100% {
+          transform: scale(0.8) translateY(70vh);
+          opacity: 0;
+        }
+      }
+
+      @keyframes serverLight {
+        0%,
+        100% {
+          background-color: rgba(46, 204, 113, 0.5);
+        }
+        50% {
+          background-color: rgba(46, 204, 113, 1);
+        }
+      }
+
+      @keyframes floatParticle {
+        0% {
+          transform: translateY(0) translateX(0);
+          opacity: 0;
+        }
+        10% {
+          opacity: 1;
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-100vh) translateX(100px);
+          opacity: 0;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          width: 90%;
+          padding: 30px 20px;
+        }
+
+        h1 {
+          font-size: 1.8rem;
+        }
+
+        .pipeline,
+        .cloud-1,
+        .cloud-2,
+        .cloud-3,
+        .server-1 {
+          display: none;
+        }
+
+        .deployment-1,
+        .deployment-2 {
+          display: block;
+        }
+
+        .code-block {
+          width: 80px;
+          height: 60px;
+        }
+      }
+    </style>
+    <script>
+      function togglePassword(fieldId, eyeIconId) {
+        var field = document.getElementById(fieldId);
+        var eyeIcon = document.getElementById(eyeIconId);
+        if (field.type === "password") {
+          field.type = "text";
+          eyeIcon.textContent = "👁️"; // Open eye symbol
+        } else {
+          field.type = "password";
+          eyeIcon.textContent = "🙈"; // Closed eye symbol
+        }
+      }
+
+      // Create particles
+      document.addEventListener("DOMContentLoaded", function () {
+        const particlesContainer = document.querySelector(
+          ".particles-container"
+        );
+        const particleCount = 30;
+
+        for (let i = 0; i < particleCount; i++) {
+          createParticle(particlesContainer);
+        }
+
+        // Generate code block content
+        generateCodeContent();
+      });
+
+      function createParticle(container) {
+        const particle = document.createElement("div");
+        particle.className = "particle";
+
+        // Random position
+        particle.style.left = Math.random() * 100 + "%";
+        particle.style.top = Math.random() * 100 + "%";
+
+        // Random size
+        const size = Math.random() * 3 + 1;
+        particle.style.width = size + "px";
+        particle.style.height = size + "px";
+
+        // Random colors based on theme
+        const colors = [
+          "rgba(52, 152, 219, 0.6)", // blue
+          "rgba(46, 204, 113, 0.6)", // green
+          "rgba(155, 89, 182, 0.6)", // purple
+        ];
+        particle.style.backgroundColor =
+          colors[Math.floor(Math.random() * colors.length)];
+
+        // Random animation duration and delay
+        const duration = Math.random() * 20 + 10;
+        const delay = Math.random() * 15;
+        particle.style.animation = `floatParticle ${duration}s linear ${delay}s infinite`;
+
+        container.appendChild(particle);
+      }
+
+      function generateCodeContent() {
+        const codeBlocks = document.querySelectorAll(".code-block");
+
+        const codeSnippets = [
+          `function deploy() {
+  const app = new App();
+  app.init();
+  pipeline.start();
+  return app.build();
+}
+
+deploy()
+  .then(result => {
+    console.log('Build Success');
+    aws.deploy(result);
+  });`,
+          `class Pipeline {
+  constructor() {
+    this.stages = [];
+  }
+  
+  addStage(stage) {
+    this.stages.push(stage);
+  }
+  
+  async execute() {
+    for(let stage of this.stages) {
+      await stage.run();
+    }
+  }
+}`,
+        ];
+
+        codeBlocks.forEach((block, index) => {
+          block.textContent = codeSnippets[index % codeSnippets.length];
+        });
+      }
     </script>
-</head>
-<body>
-    <h1>Signup</h1>
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <p class="{{ category }}">{{ message }}</p>
-        {% endfor %}
-    {% endwith %}
+  </head>
+  <body>
+    <!-- Modern grid background -->
+    <div class="grid-background"></div>
 
-    <form method="POST">
-        <label>Username:</label><br />
-        <input type="text" name="username" required /><br />
+    <!-- CI/CD Pipeline Visualization -->
+    <div class="pipeline-container">
+      <div class="pipeline">
+        <div class="node node-1">
+          <span class="node-label">Build</span>
+        </div>
+        <div class="node node-2">
+          <span class="node-label">Test</span>
+        </div>
+        <div class="node node-3">
+          <span class="node-label">Deploy</span>
+        </div>
+        <div class="node node-4">
+          <span class="node-label">Monitor</span>
+        </div>
+      </div>
+    </div>
 
-        <label>Password:</label><br />
-        <input type="password" name="password" id="password" required />
-        <span id="togglePassword" onclick="togglePassword('password', 'togglePassword')" style="cursor: pointer;">👁️</span>
-        <br />
+    <!-- Cloud Computing Elements -->
+    <div class="cloud-container">
+      <div class="cloud cloud-1">
+        <span class="cloud-icon">☁️</span>
+      </div>
+      <div class="cloud cloud-2">
+        <span class="cloud-icon">⚙️</span>
+      </div>
+      <div class="cloud cloud-3">
+        <span class="cloud-icon">🔄</span>
+      </div>
 
-        <label>AWS Secret Key:</label><br />
-        <input type="password" name="aws_secret_key" id="aws_secret_key" required />
-        <span id="toggleAwsSecretKey" onclick="togglePassword('aws_secret_key', 'toggleAwsSecretKey')" style="cursor: pointer;">👁️</span>
-        <br />
+      <!-- Data Streams -->
+      <div class="data-stream data-stream-1"></div>
+      <div class="data-stream data-stream-2"></div>
+      <div class="data-stream data-stream-3"></div>
 
-        <label>AWS Secret ID:</label><br />
-        <input type="password" name="aws_secret_id" id="aws_secret_id" required />
-        <span id="toggleAwsSecretId" onclick="togglePassword('aws_secret_id', 'toggleAwsSecretId')" style="cursor: pointer;">👁️</span>
-        <br />
+      <!-- Code Blocks -->
+      <div class="code-block code-block-1"></div>
+      <div class="code-block code-block-2"></div>
 
-        <button type="submit">Signup</button>
-    </form>
+      <!-- Deployments -->
+      <div class="deployment deployment-1"></div>
+      <div class="deployment deployment-2"></div>
 
-    <p>
+      <!-- Server -->
+      <div class="server server-1">
+        <div class="server-unit"></div>
+        <div class="server-unit"></div>
+        <div class="server-unit"></div>
+        <div class="server-unit"></div>
+        <div class="server-unit"></div>
+        <div class="server-unit"></div>
+      </div>
+    </div>
+
+    <!-- Particles -->
+    <div class="particles-container"></div>
+
+    <!-- Main content container -->
+    <div class="container">
+      <h1>Deploy Your Access</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %} {% for
+      category, message in messages %}
+      <p class="flash {{ category }}">{{ message }}</p>
+      {% endfor %} {% endwith %}
+
+      <form method="POST">
+        <label>Username:</label>
+        <input
+          type="text"
+          name="username"
+          required
+          placeholder="Enter your username"
+        />
+
+        <div class="password-container">
+          <label>Password:</label>
+          <input
+            type="password"
+            name="password"
+            id="password"
+            required
+            placeholder="Enter your password"
+          />
+          <span
+            id="togglePassword"
+            class="toggle-password"
+            onclick="togglePassword('password', 'togglePassword')"
+            >👁️</span
+          >
+        </div>
+
+        <div class="password-container">
+          <label>AWS Secret Key:</label>
+          <input
+            type="password"
+            name="aws_secret_key"
+            id="aws_secret_key"
+            required
+            placeholder="Enter your AWS Secret Key"
+          />
+          <span
+            id="toggleAwsSecretKey"
+            class="toggle-password"
+            onclick="togglePassword('aws_secret_key', 'toggleAwsSecretKey')"
+            >👁️</span
+          >
+        </div>
+
+        <div class="password-container">
+          <label>AWS Secret ID:</label>
+          <input
+            type="password"
+            name="aws_secret_id"
+            id="aws_secret_id"
+            required
+            placeholder="Enter your AWS Secret ID"
+          />
+          <span
+            id="toggleAwsSecretId"
+            class="toggle-password"
+            onclick="togglePassword('aws_secret_id', 'toggleAwsSecretId')"
+            >👁️</span
+          >
+        </div>
+
+        <button type="submit">Initialize Account</button>
+      </form>
+
+      <p>
         Already have an account?
-        <a href="{{ url_for('auth.login') }}">Login here</a>.
-    </p>
-</body>
+        <a href="{{ url_for('auth.login') }}">Access Login Portal</a>
+      </p>
+    </div>
+  </body>
 </html>

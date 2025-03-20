@@ -10,6 +10,7 @@ test2.py
 test3.py
 test.html
 input.txt
+terraform/*
 testfolder
 script/ECR/*
 !script/ECR/main.tf
