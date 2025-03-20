@@ -1,63 +1,531 @@
 <!DOCTYPE html>
 <html lang="en">
-  <script>
-    // Periodically check the task status
-    function checkStatus() {
-      fetch("/status")
-        .then((response) => {
-          if (response.redirected) {
-            // Redirect to the next page if the task is done
-            window.location.href = response.url;
-          }
-        })
-        .catch((err) => console.error("Error checking status:", err));
-    }
-
-    // Check the status every 1 second
-    setInterval(checkStatus, 500);
-  </script>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cosmic Loading Screen</title>
+    <title>Cloud Tech Loading</title>
     <style>
+      /* Core styling and variables */
+      :root {
+        --primary: #4f46e5;
+        --primary-dark: #4338ca;
+        --primary-light: #818cf8;
+        --secondary: #06b6d4;
+        --secondary-dark: #0891b2;
+        --accent: #10b981;
+        --accent-alt: #0ea5e9;
+        --terraform: #7b42bc;
+        --kubernetes: #326ce5;
+        --docker: #2496ed;
+        --git: #f05032;
+        --aws: #ff9900;
+        --dark: #111827;
+        --dark-2: #1f2937;
+        --light: #f9fafb;
+        --gray: #9ca3af;
+        --glass: rgba(17, 25, 40, 0.75);
+        --glass-border: rgba(255, 255, 255, 0.125);
+        --glow-primary: 0 0 20px rgba(79, 70, 229, 0.6);
+        --glow-secondary: 0 0 15px rgba(6, 182, 212, 0.5);
+        --glow-terraform: 0 0 15px rgba(123, 66, 188, 0.6);
+        --glow-kubernetes: 0 0 15px rgba(50, 108, 229, 0.6);
+        --glow-docker: 0 0 15px rgba(36, 150, 237, 0.6);
+        --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
+        font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
       }
 
       body {
-        background: radial-gradient(circle, #0d1b2a, #1b263b, #000000);
+        height: 100vh;
         overflow: hidden;
+        background-color: var(--dark);
+        color: var(--light);
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
-        color: white;
-        font-family: Arial, sans-serif;
+        position: relative;
       }
 
-      .galaxy-container {
-        position: relative;
-        width: 300px;
-        height: 300px;
+      /* Loading overlay */
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, #182338 0%, #0c1221 100%);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
       }
 
-      .galaxy {
+      /* Grid overlay */
+      .grid-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: linear-gradient(
+            rgba(65, 78, 112, 0.05) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(65, 78, 112, 0.05) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+      }
+
+      /* Loading content wrapper */
+      .loading-content {
         position: relative;
-        width: 200px;
-        height: 200px;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        backdrop-filter: blur(5px);
+        border-radius: 16px;
+        background: rgba(17, 25, 40, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Circular progress indicator */
+      .circular-progress {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin-bottom: 1.5rem;
+        perspective: 1000px;
+      }
+
+      .circle-outer {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 3px solid rgba(79, 70, 229, 0.1);
+        border-top-color: var(--primary);
+        border-left-color: var(--primary);
+        animation: spinCircle 2s linear infinite;
+      }
+
+      .circle-middle {
+        position: absolute;
+        width: 70%;
+        height: 70%;
+        top: 15%;
+        left: 15%;
+        border-radius: 50%;
+        border: 3px solid rgba(6, 182, 212, 0.1);
+        border-top-color: var(--secondary);
+        border-right-color: var(--secondary);
+        animation: spinCircleReverse 3s linear infinite;
+      }
+
+      .circle-inner {
+        position: absolute;
+        width: 40%;
+        height: 40%;
+        top: 30%;
+        left: 30%;
+        border-radius: 50%;
+        border: 3px solid rgba(16, 185, 129, 0.1);
+        border-bottom-color: var(--accent);
+        border-right-color: var(--accent);
+        animation: spinCircle 1.5s linear infinite;
+      }
+
+      .circle-core {
+        position: absolute;
+        width: 20%;
+        height: 20%;
+        top: 40%;
+        left: 40%;
         border-radius: 50%;
         background: radial-gradient(
-          circle,
-          rgba(255, 255, 255, 0.5) 20%,
-          transparent 70%
+          circle at center,
+          var(--primary-light),
+          var(--primary-dark)
         );
-        animation: spin 12s linear infinite;
+        box-shadow: 0 0 15px var(--primary);
+        animation: pulseCore 2s ease-in-out infinite alternate;
       }
 
-      @keyframes spin {
+      .loading-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        letter-spacing: 2px;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, var(--light), var(--primary-light));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-align: center;
+      }
+
+      .loading-status {
+        font-size: 0.9rem;
+        color: var(--gray);
+        min-height: 20px;
+        text-align: center;
+      }
+
+      /* Animated dots */
+      .loading-dots {
+        display: inline-block;
+      }
+
+      .loading-dots::after {
+        content: "";
+        animation: loadingDots 1.5s infinite;
+      }
+
+      /* CI/CD Pipeline animation elements */
+      .pipeline-system {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .pipeline {
+        position: absolute;
+        height: 2px;
+        background: var(--primary-light);
+        opacity: 0.2;
+        transform-origin: left center;
+        will-change: width, height, opacity;
+      }
+
+      .pipeline-horizontal {
+        width: 100px;
+        animation: extendPipeline 4s infinite;
+      }
+
+      .pipeline-vertical {
+        width: 2px;
+        height: 100px;
+        animation: extendPipelineVertical 4s infinite;
+      }
+
+      .pipeline-node {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: var(--primary);
+        border-radius: 50%;
+        box-shadow: var(--glow-primary);
+        will-change: transform, opacity;
+      }
+
+      .pipeline-data {
+        position: absolute;
+        width: 8px;
+        height: 4px;
+        background: var(--secondary);
+        border-radius: 4px;
+        box-shadow: var(--glow-secondary);
+        opacity: 0;
+        animation: moveData 4s infinite;
+        will-change: transform, opacity;
+      }
+
+      /* Cloud server elements */
+      .cloud-server {
+        position: absolute;
+        width: 80px;
+        height: 120px;
+        background: linear-gradient(
+          135deg,
+          rgba(30, 41, 59, 0.7),
+          rgba(17, 24, 39, 0.8)
+        );
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-around;
+        padding: 10px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        will-change: transform;
+        animation: floatServer 10s ease-in-out infinite;
+        z-index: 1;
+      }
+
+      .server-light {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--accent);
+        box-shadow: 0 0 8px var(--accent);
+        animation: serverPulse 2s infinite alternate;
+      }
+
+      .server-rack {
+        width: 60px;
+        height: 10px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        margin: 2px 0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .server-progress {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 30%;
+        background: linear-gradient(90deg, var(--primary), var(--secondary));
+        animation: serverProgress 4s infinite;
+        will-change: width;
+      }
+
+      /* Code block animation */
+      .code-block {
+        position: absolute;
+        width: 140px;
+        height: 80px;
+        background: rgba(15, 23, 42, 0.6);
+        border-radius: 6px;
+        border-left: 3px solid var(--primary);
+        padding: 8px;
+        font-family: "Fira Code", monospace;
+        font-size: 10px;
+        color: var(--gray);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        will-change: transform;
+        animation: floatCodeBlock 15s ease-in-out infinite alternate;
+        z-index: 1;
+      }
+
+      .code-line {
+        margin-bottom: 4px;
+        white-space: nowrap;
+        transform: translateX(0);
+        animation: codeLine 12s infinite;
+      }
+
+      .code-keyword {
+        color: #818cf8;
+      }
+
+      .code-string {
+        color: #34d399;
+      }
+
+      .code-function {
+        color: #60a5fa;
+      }
+
+      /* Technology elements */
+      .tech-element {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+      }
+
+      /* Docker container elements */
+      .docker-container {
+        position: absolute;
+        width: 60px;
+        height: 40px;
+        background: var(--docker);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+        box-shadow: var(--glow-docker);
+        opacity: 0.8;
+        transform-origin: center bottom;
+        animation: floatDocker 8s ease-in-out infinite,
+          scaleDocker 5s ease-in-out infinite alternate;
+        z-index: 1;
+      }
+
+      .docker-container::before {
+        content: "";
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FFFFFF'%3E%3Cpath d='M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.185-.186H5.136a.186.186 0 00-.186.185v1.888c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.6.332-1.246.514-1.946.542H4.746c-.248.798-.28 1.635-.099 2.442.22.957.685 1.87 1.304 2.492.715.675 1.585 1.13 2.499 1.29.6.097 1.205.146 1.813.145.503 0 1.003-.057 1.497-.171.488-.112.964-.273 1.423-.479.292-.133.593-.257.867-.415.662-.379 1.243-.893 1.692-1.495.169-.21.32-.431.455-.657.364-.63.572-1.321.608-2.062h.345c1.096 0 2.24-.08 3.108-.344.242-.079.478-.17.707-.271.166-.064.603-.262.736-.687.045-.141.046-.283.005-.424-.087-.238-.327-.423-.668-.423'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-size: contain;
+        right: 5px;
+        bottom: 5px;
+      }
+
+      /* Terraform elements */
+      .terraform-element {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        z-index: 1;
+      }
+
+      .terraform-block {
+        position: absolute;
+        width: 20px;
+        height: 30px;
+        background: var(--terraform);
+        border-radius: 2px;
+        box-shadow: var(--glow-terraform);
+        opacity: 0.8;
+        transform-origin: center center;
+      }
+
+      .terraform-line {
+        position: absolute;
+        height: 2px;
+        background: var(--terraform);
+        opacity: 0.5;
+        transform-origin: left center;
+        animation: extendTerraformLine 3s ease-in-out infinite alternate;
+      }
+
+      /* Kubernetes elements */
+      .kubernetes-element {
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        z-index: 1;
+      }
+
+      .kubernetes-pod {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: var(--kubernetes);
+        border-radius: 4px;
+        box-shadow: var(--glow-kubernetes);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 10px;
+        animation: floatPod 10s ease-in-out infinite;
+      }
+
+      .kubernetes-pod::before {
+        content: "Pod";
+        font-size: 6px;
+        position: absolute;
+        bottom: -10px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .kubernetes-center {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(50, 108, 229, 0.2);
+        border-radius: 50%;
+        border: 1px solid var(--kubernetes);
+        box-shadow: var(--glow-kubernetes);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .kubernetes-center::before {
+        content: "";
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23326CE5'%3E%3Cpath d='M11.988 0a1.71 1.71 0 00-.573.097L2.692 2.788a1.296 1.296 0 00-.92.9L.027 12.59a1.42 1.42 0 00.392 1.2l6.294 6.25c.318.28.734.424 1.157.4l9.96-.792a1.425 1.425 0 001.067-.643l4.578-7.764a1.327 1.327 0 00.242-1.08l-2.17-9.06a1.288 1.288 0 00-.853-.908L12.658.09c-.212-.06-.446-.092-.67-.09zM8.94 5.216c.354.003.686.176.89.467.148.32.127.692-.052.992l-1.158 1a.254.254 0 00-.06.267l.442 1.322c.079.24.016.5-.166.687a.66.66 0 01-.706.12l-1.215-.507c-.084-.034-.18-.034-.264 0l-1.214.507a.66.66 0 01-.707-.12.621.621 0 01-.166-.687l.442-1.322a.254.254 0 00-.06-.267l-1.158-1.001c-.192-.172-.273-.434-.214-.685a.63.63 0 01.514-.476l1.381-.201a.253.253 0 00.205-.147l.617-1.251c.109-.225.328-.38.579-.415a.68.68 0 01.662.283l.812 1.148c.045.066.119.11.199.119l1.392.117a.906.906 0 01.127.011zm5.816.2a3.638 3.638 0 013.649 3.647 3.638 3.638 0 01-3.649 3.646 3.638 3.638 0 01-3.646-3.646A3.638 3.638 0 0114.757 5.416zm4.193.14c.479-.12.981.161 1.116.642l.248.468c.086.174.277.268.469.23l.528-.05c.474-.073.939.194 1.046.661.106.467-.161.94-.618 1.08l-.504.077a.427.427 0 00-.336.336l-.08.503c-.072.467-.402.824-.872.826a.93.93 0 01-.885-.693l-.139-.518a.426.426 0 00-.413-.31h-.523c-.487 0-.88-.395-.883-.883 0-.487.392-.883.883-.883h.523c.182 0 .344-.112.413-.316l.134-.512a.851.851 0 01.893-.658zm-9.949.178a2.57 2.57 0 00-2.57 2.572 2.57 2.57 0 002.57 2.57 2.57 2.57 0 002.573-2.57 2.57 2.57 0 00-2.573-2.572zm6.043 8.389c.21-.001.414.062.587.178.338.228.491.646.376 1.034-.114.388-.465.655-.865.66h-2.128c-.084 0-.162.042-.209.111l-1.616 2.461c-.194.275-.518.428-.853.403-.336-.025-.633-.23-.782-.53a.917.917 0 01.099-.952l1.14-1.733c.05-.07.053-.166.006-.236L9.273 14.03c-.231-.271-.269-.659-.097-.973a.826.826 0 01.839-.377l2.544.456c.09.018.18-.013.249-.08l1.903-1.799a.999.999 0 01.686-.244z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-size: contain;
+      }
+
+      /* Microservice containers */
+      .microservice {
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        will-change: transform;
+        animation: floatMicroservice 12s ease-in-out infinite alternate;
+        z-index: 1;
+      }
+
+      .microservice-icon {
+        font-size: 1.2rem;
+        color: var(--primary-light);
+      }
+
+      /* Data packages */
+      .data-package {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-radius: 4px;
+        background: var(--primary-light);
+        box-shadow: 0 0 8px var(--primary-light);
+        opacity: 0.8;
+        animation: floatingData 10s infinite linear;
+        z-index: 1;
+      }
+
+      /* Connection lines */
+      .connection-line {
+        position: absolute;
+        height: 2px;
+        background: linear-gradient(90deg, var(--primary-light), transparent);
+        animation: pulseLine 3s infinite;
+        z-index: 0;
+      }
+
+      /* AWS cloud */
+      .aws-cloud {
+        position: absolute;
+        top: 10%;
+        right: 15%;
+        width: 80px;
+        height: 50px;
+        animation: floatCloud 8s ease-in-out infinite;
+        z-index: 2;
+      }
+
+      .aws-cloud::before {
+        content: "";
+        position: absolute;
+        width: 60px;
+        height: 60px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FF9900'%3E%3Cpath d='M6.763 10.036c0 .296.032.535.088.71.064.176.144.368.256.576.04.063.056.127.056.183 0 .08-.048.16-.152.24l-.503.335a.383.383 0 0 1-.208.072c-.08 0-.16-.04-.239-.112a2.47 2.47 0 0 1-.287-.375 6.18 6.18 0 0 1-.248-.471c-.622.734-1.405 1.101-2.347 1.101-.67 0-1.205-.191-1.596-.574-.391-.384-.59-.894-.59-1.533 0-.678.239-1.23.726-1.644.487-.415 1.133-.623 1.955-.623.272 0 .551.024.846.064.296.04.6.104.918.176v-.583c0-.607-.127-1.03-.375-1.277-.255-.248-.686-.367-1.3-.367-.28 0-.568.031-.863.103-.295.072-.583.16-.862.272a2.287 2.287 0 0 1-.28.104.488.488 0 0 1-.127.023c-.112 0-.168-.08-.168-.247v-.391c0-.128.016-.224.056-.28a.597.597 0 0 1 .224-.167c.279-.144.614-.264 1.005-.36a4.84 4.84 0 0 1 1.246-.151c.95 0 1.644.216 2.091.647.439.43.662 1.085.662 1.963v2.586zm-3.24 1.214c.263 0 .534-.048.822-.144.287-.096.543-.271.758-.51.128-.152.224-.32.272-.512.047-.191.08-.423.08-.694v-.335a6.66 6.66 0 0 0-.735-.136 6.02 6.02 0 0 0-.75-.048c-.535 0-.926.104-1.19.32-.263.215-.39.518-.39.917 0 .375.095.655.295.846.191.2.47.296.838.296zm6.41.862c-.144 0-.24-.024-.304-.08-.064-.048-.12-.16-.168-.311L7.586 5.55a1.398 1.398 0 0 1-.072-.32c0-.128.064-.2.191-.2h.783c.151 0 .255.025.31.08.065.048.113.16.16.312l1.342 5.284 1.245-5.284c.04-.16.088-.264.151-.312a.549.549 0 0 1 .32-.08h.638c.152 0 .256.025.32.08.063.048.12.16.151.312l1.261 5.348 1.381-5.348c.048-.16.104-.264.16-.312a.52.52 0 0 1 .311-.08h.743c.127 0 .2.065.2.2 0 .04-.009.08-.017.128a1.137 1.137 0 0 1-.056.2l-1.923 6.17c-.048.16-.104.263-.168.311a.51.51 0 0 1-.303.08h-.687c-.151 0-.255-.024-.32-.08-.063-.056-.119-.16-.15-.32l-1.238-5.148-1.23 5.14c-.04.16-.087.264-.15.32-.065.056-.177.08-.32.08zm10.256.215c-.415 0-.83-.048-1.229-.143-.399-.096-.71-.2-.918-.32-.128-.071-.215-.151-.247-.223a.563.563 0 0 1-.048-.224v-.407c0-.167.064-.247.183-.247.048 0 .096.008.144.024.048.016.12.048.2.08.271.12.566.215.878.279.319.064.63.096.95.096.502 0 .894-.088 1.165-.264a.86.86 0 0 0 .415-.758.777.777 0 0 0-.215-.559c-.144-.151-.416-.287-.807-.415l-1.157-.36c-.583-.183-1.014-.454-1.277-.813a1.902 1.902 0 0 1-.4-1.158c0-.335.073-.63.216-.886.144-.255.335-.479.575-.654.24-.184.51-.32.83-.415.32-.096.655-.136 1.006-.136.175 0 .359.008.535.032.183.024.35.056.518.088.16.04.312.08.455.127.144.048.256.096.336.144a.69.69 0 0 1 .24.2.43.43 0 0 1 .071.263v.375c0 .168-.064.256-.184.256a.83.83 0 0 1-.303-.096 3.652 3.652 0 0 0-1.532-.311c-.455 0-.815.071-1.062.223-.248.152-.375.383-.375.71 0 .224.08.416.24.567.159.152.454.304.877.44l1.134.358c.574.184.99.44 1.237.767.247.327.367.702.367 1.117 0 .343-.072.655-.207.926-.144.272-.336.511-.583.703-.248.2-.543.343-.886.447-.36.111-.734.167-1.142.167zM21.698 16.207c-2.626 1.94-6.442 2.969-9.722 2.969-4.598 0-8.74-1.7-11.87-4.526-.247-.223-.024-.527.272-.351 3.384 1.963 7.559 3.153 11.877 3.153 2.914 0 6.114-.607 9.06-1.852.439-.2.814.287.383.607zM22.792 14.961c-.336-.43-2.22-.207-3.074-.103-.255.032-.295-.192-.063-.36 1.5-1.053 3.967-.75 4.254-.399.287.36-.08 2.826-1.485 4.007-.215.184-.423.088-.327-.151.32-.79 1.03-2.57.695-2.994z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-size: contain;
+      }
+
+      /* Animation keyframes */
+      @keyframes spinCircle {
         0% {
           transform: rotate(0deg);
         }
@@ -66,159 +534,661 @@
         }
       }
 
-      .star {
-        position: absolute;
-        width: 2px;
-        height: 2px;
-        background: white;
-        border-radius: 50%;
-        animation: twinkle 2s infinite alternate ease-in-out;
-      }
-
-      @keyframes twinkle {
-        from {
-          opacity: 1;
-        }
-        to {
-          opacity: 0.3;
-        }
-      }
-
-      .planet {
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: linear-gradient(45deg, #ff7f50, #ff4500);
-        animation: orbit 8s linear infinite, pulse 2s infinite alternate;
-      }
-
-      @keyframes orbit {
+      @keyframes spinCircleReverse {
         0% {
-          transform: rotate(0deg) translateX(130px) rotate(0deg);
+          transform: rotate(0deg);
         }
         100% {
-          transform: rotate(360deg) translateX(130px) rotate(-360deg);
+          transform: rotate(-360deg);
         }
       }
 
-      @keyframes pulse {
+      @keyframes pulseCore {
         0% {
           transform: scale(1);
+          opacity: 0.7;
         }
         100% {
           transform: scale(1.2);
-        }
-      }
-
-      .comet {
-        position: absolute;
-        width: 10px;
-        height: 10px;
-        background: linear-gradient(45deg, #f5a623, #ff4500);
-        border-radius: 50%;
-        animation: orbit 6s ease-in-out infinite, trail 6s ease-in-out infinite;
-      }
-
-      @keyframes trail {
-        0% {
-          box-shadow: 0 0 10px #ff4500, 0 0 20px #f5a623;
-        }
-        100% {
-          box-shadow: 0 0 5px #ff4500, 0 0 10px #f5a623;
-        }
-      }
-
-      .nebula {
-        position: absolute;
-        width: 300px;
-        height: 300px;
-        border-radius: 50%;
-        background: radial-gradient(
-          circle,
-          rgba(255, 0, 150, 0.2) 20%,
-          transparent 80%
-        );
-        animation: fade 6s linear infinite alternate;
-      }
-
-      @keyframes fade {
-        0% {
-          opacity: 0.2;
-        }
-        100% {
-          opacity: 0.5;
-        }
-      }
-
-      .shooting-star {
-        position: absolute;
-        width: 5px;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, white, transparent);
-        animation: shoot 3s infinite;
-      }
-
-      @keyframes shoot {
-        0% {
-          transform: translate(-50px, -50px) rotate(45deg);
-          opacity: 0;
-        }
-        50% {
-          transform: translate(300px, 300px) rotate(45deg);
           opacity: 1;
         }
+      }
+
+      @keyframes loadingDots {
+        0%,
+        20% {
+          content: "";
+        }
+        40% {
+          content: ".";
+        }
+        60% {
+          content: "..";
+        }
+        80%,
         100% {
-          transform: translate(600px, 600px) rotate(45deg);
-          opacity: 0;
+          content: "...";
         }
       }
 
-      .progress {
-        position: absolute;
-        bottom: -40px;
-        width: 100%;
-        text-align: center;
-        font-size: 14px;
-        animation: fadeIn 2s infinite alternate;
+      @keyframes typeWriter {
+        from {
+          width: 0;
+        }
+        to {
+          width: 100%;
+        }
+      }
+
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
       }
 
       @keyframes fadeIn {
         from {
-          opacity: 0.5;
+          opacity: 0;
+          transform: translateY(10px);
         }
         to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes extendPipeline {
+        0%,
+        20% {
+          width: 0;
+          opacity: 0.1;
+        }
+        50%,
+        70% {
+          width: 100px;
+          opacity: 0.5;
+        }
+        100% {
+          width: 0;
+          opacity: 0.1;
+        }
+      }
+
+      @keyframes extendPipelineVertical {
+        0%,
+        20% {
+          height: 0;
+          opacity: 0.1;
+        }
+        50%,
+        70% {
+          height: 100px;
+          opacity: 0.5;
+        }
+        100% {
+          height: 0;
+          opacity: 0.1;
+        }
+      }
+
+      @keyframes moveData {
+        0%,
+        20% {
+          left: 0;
+          opacity: 0;
+        }
+        30% {
+          opacity: 1;
+        }
+        70% {
+          left: 100px;
+          opacity: 1;
+        }
+        80%,
+        100% {
+          left: 100px;
+          opacity: 0;
+        }
+      }
+
+      @keyframes moveDataVertical {
+        0%,
+        20% {
+          top: 0;
+          opacity: 0;
+        }
+        30% {
+          opacity: 1;
+        }
+        70% {
+          top: 100px;
+          opacity: 1;
+        }
+        80%,
+        100% {
+          top: 100px;
+          opacity: 0;
+        }
+      }
+
+      @keyframes serverPulse {
+        0% {
+          opacity: 0.5;
+        }
+        100% {
           opacity: 1;
         }
       }
 
-      .galaxy:hover {
-        box-shadow: 0 0 20px #f5a623, 0 0 40px #ff4500;
-        transition: box-shadow 0.3s ease;
+      @keyframes serverProgress {
+        0% {
+          width: 0;
+        }
+        50% {
+          width: 70%;
+        }
+        100% {
+          width: 0;
+        }
+      }
+
+      @keyframes codeLine {
+        0%,
+        10% {
+          transform: translateX(0);
+        }
+        40%,
+        60% {
+          transform: translateX(-50%);
+        }
+        90%,
+        100% {
+          transform: translateX(-100%);
+        }
+      }
+
+      @keyframes floatServer {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      @keyframes floatCodeBlock {
+        0%,
+        100% {
+          transform: translateY(0) rotate(0deg);
+        }
+        50% {
+          transform: translateY(-15px) rotate(1deg);
+        }
+      }
+
+      @keyframes floatMicroservice {
+        0%,
+        100% {
+          transform: translateY(0) rotate(0deg);
+        }
+        33% {
+          transform: translateY(-8px) rotate(1deg);
+        }
+        66% {
+          transform: translateY(5px) rotate(-1deg);
+        }
+      }
+
+      @keyframes floatingData {
+        0% {
+          transform: translate(0, 0) rotate(0deg);
+        }
+        25% {
+          transform: translate(300px, -100px) rotate(90deg);
+        }
+        50% {
+          transform: translate(400px, 200px) rotate(180deg);
+        }
+        75% {
+          transform: translate(100px, 300px) rotate(270deg);
+        }
+        100% {
+          transform: translate(0, 0) rotate(360deg);
+        }
+      }
+
+      @keyframes pulseLine {
+        0%,
+        100% {
+          opacity: 0.1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      @keyframes floatDocker {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-15px);
+        }
+      }
+
+      @keyframes scaleDocker {
+        0%,
+        100% {
+          transform: scaleY(1);
+        }
+        50% {
+          transform: scaleY(1.1);
+        }
+      }
+
+      @keyframes extendTerraformLine {
+        0% {
+          width: 0;
+          opacity: 0.1;
+        }
+        50% {
+          width: 50px;
+          opacity: 0.5;
+        }
+        100% {
+          width: 0;
+          opacity: 0.1;
+        }
+      }
+
+      @keyframes floatPod {
+        0% {
+          transform: translate(0, 0) rotate(0deg);
+        }
+        25% {
+          transform: translate(20px, -20px) rotate(10deg);
+        }
+        50% {
+          transform: translate(0, -40px) rotate(0deg);
+        }
+        75% {
+          transform: translate(-20px, -20px) rotate(-10deg);
+        }
+        100% {
+          transform: translate(0, 0) rotate(0deg);
+        }
+      }
+
+      @keyframes floatCloud {
+        0%,
+        100% {
+          transform: translateY(0) scale(1);
+        }
+        50% {
+          transform: translateY(-15px) scale(1.05);
+        }
       }
     </style>
   </head>
   <body>
-    <div class="galaxy-container">
-      <div class="nebula"></div>
-      <div class="galaxy">
-        <!-- Stars -->
-        <div class="star" style="top: 10%; left: 50%"></div>
-        <div class="star" style="top: 30%; left: 20%"></div>
-        <div class="star" style="top: 50%; left: 80%"></div>
-        <div class="star" style="top: 70%; left: 40%"></div>
-        <div class="star" style="top: 90%; left: 60%"></div>
+    <div class="loading-overlay">
+      <!-- Grid overlay -->
+      <div class="grid-overlay"></div>
 
-        <!-- Comet -->
-        <div class="comet"></div>
+      <!-- CI/CD Pipeline system -->
+      <div id="pipeline-system" class="pipeline-system"></div>
 
-        <!-- Planet -->
-        <div class="planet"></div>
+      <!-- Docker containers -->
+      <div class="docker-container" style="bottom: 20%; left: 20%">nginx</div>
+      <div class="docker-container" style="bottom: 25%; left: 25%">redis</div>
+      <div class="docker-container" style="bottom: 30%; left: 30%">mongo</div>
+      <div class="docker-container" style="bottom: 15%; left: 15%">node</div>
+
+      <!-- Cloud servers -->
+      <div class="cloud-server" style="top: 15%; left: 10%">
+        <div class="server-light"></div>
+        <div class="server-rack"><div class="server-progress"></div></div>
+        <div class="server-rack"><div class="server-progress"></div></div>
+        <div class="server-rack"><div class="server-progress"></div></div>
       </div>
 
-      <!-- Shooting Star -->
-      <div class="shooting-star"></div>
+      <div class="cloud-server" style="top: 60%; left: 85%">
+        <div class="server-light"></div>
+        <div class="server-rack"><div class="server-progress"></div></div>
+        <div class="server-rack"><div class="server-progress"></div></div>
+        <div class="server-rack"><div class="server-progress"></div></div>
+      </div>
+
+      <!-- Terraform infrastructure -->
+      <div class="terraform-element" style="top: 30%; left: 70%">
+        <div class="terraform-block" style="top: 0; left: 0"></div>
+        <div class="terraform-block" style="top: 40px; left: 30px"></div>
+        <div class="terraform-block" style="top: 70px; left: 60px"></div>
+        <div
+          class="terraform-line"
+          style="top: 15px; left: 20px; width: 30px; transform: rotate(30deg)"
+        ></div>
+        <div
+          class="terraform-line"
+          style="top: 55px; left: 50px; width: 30px; transform: rotate(30deg)"
+        ></div>
+      </div>
+
+      <!-- Kubernetes pods -->
+      <div class="kubernetes-element" style="bottom: 30%; right: 20%">
+        <div class="kubernetes-center"></div>
+        <div class="kubernetes-pod" style="top: 0; left: 50%"></div>
+        <div class="kubernetes-pod" style="top: 50%; left: 0"></div>
+        <div class="kubernetes-pod" style="top: 100%; left: 50%"></div>
+        <div class="kubernetes-pod" style="top: 50%; left: 100%"></div>
+      </div>
+
+      <!-- Code blocks -->
+      <div class="code-block" style="top: 25%; left: 25%">
+        <div class="code-line">
+          <span class="code-keyword">terraform</span> {
+        </div>
+        <div class="code-line">
+          <span class="code-function">required_providers</span> {
+        </div>
+        <div class="code-line">aws = { ... }</div>
+        <div class="code-line">}</div>
+        <div class="code-line">}</div>
+      </div>
+
+      <div class="code-block" style="top: 65%; left: 65%">
+        <div class="code-line">
+          <span class="code-keyword">def</span>
+          <span class="code-function">deploy</span>():
+        </div>
+        <div class="code-line">
+          image = <span class="code-string">"app:latest"</span>
+        </div>
+        <div class="code-line">
+          <span class="code-function">docker_push</span>(image)
+        </div>
+        <div class="code-line">
+          <span class="code-function">k8s_apply</span>()
+        </div>
+      </div>
+
+      <!-- Microservices -->
+      <div class="microservice" style="top: 35%; left: 40%">
+        <div class="microservice-icon">⚙️</div>
+      </div>
+
+      <div class="microservice" style="top: 45%; right: 40%">
+        <div class="microservice-icon">🔄</div>
+      </div>
+
+      <div class="microservice" style="bottom: 40%; left: 50%">
+        <div class="microservice-icon">📦</div>
+      </div>
+
+      <!-- AWS Cloud -->
+      <div class="aws-cloud"></div>
+
+      <!-- Loading content with single animation -->
+      <div class="loading-content">
+        <!-- Circular Progress Indicator -->
+        <div class="circular-progress">
+          <div class="circle-outer"></div>
+          <div class="circle-middle"></div>
+          <div class="circle-inner"></div>
+          <div class="circle-core"></div>
+        </div>
+
+        <!-- Fixed title -->
+        <div class="loading-title">INITIALIZING CLOUD ENVIRONMENT</div>
+
+        <!-- Dynamic status message -->
+        <div class="loading-status" id="loading-status">
+          Loading resources<span class="loading-dots"></span>
+        </div>
+      </div>
     </div>
-    <div class="progress">Loading the universe...</div>
+
+    <script>
+      // Check the status of the task to change pagw 
+      function checkStatus() {
+        fetch("/status")
+          .then((response) => {
+            if (response.redirected) {
+              // Redirect to the next page if the task is done
+              window.location.href = response.url;
+            }
+          })
+          .catch((err) => console.error("Error checking status:", err));
+      }
+
+      // Check the status every 1 second
+      setInterval(checkStatus, 500);
+      document.addEventListener("DOMContentLoaded", function () {
+        const pipelineSystem = document.getElementById("pipeline-system");
+        const loadingStatus = document.getElementById("loading-status");
+
+        // Loading status messages
+        const statusMessages = [
+          "Loading resources",
+          "Initializing Docker containers",
+          "Provisioning infrastructure with Terraform",
+          "Setting up Kubernetes cluster",
+          "Configuring CI/CD pipelines",
+          "Connecting microservices",
+          "Setting up AWS environment",
+          "Registering service endpoints",
+          "Validating security configuration",
+          "Preparing deployment pipelines",
+          "Creating network interfaces",
+          "Configuring autoscaling policies",
+          "Almost ready",
+          "Launching application",
+        ];
+
+        // Create pipelines and nodes
+        function createPipelines() {
+          // Clear existing pipelines
+          pipelineSystem.innerHTML = "";
+
+          // Number of pipeline elements
+          const numPipelines = 15;
+
+          for (let i = 0; i < numPipelines; i++) {
+            // Random position
+            const x = Math.random() * (window.innerWidth - 100);
+            const y = Math.random() * (window.innerHeight - 100);
+
+            // Random direction (horizontal or vertical)
+            const isVertical = Math.random() > 0.5;
+
+            // Create pipeline
+            const pipeline = document.createElement("div");
+            pipeline.className = isVertical
+              ? "pipeline pipeline-vertical"
+              : "pipeline pipeline-horizontal";
+            pipeline.style.left = x + "px";
+            pipeline.style.top = y + "px";
+            pipeline.style.animationDelay = Math.random() * 4 + "s";
+            pipelineSystem.appendChild(pipeline);
+
+            // Create start node
+            const startNode = document.createElement("div");
+            startNode.className = "pipeline-node";
+            startNode.style.left = "0";
+            startNode.style.top = "0";
+            startNode.style.transform = "translate(-50%, -50%)";
+            pipeline.appendChild(startNode);
+
+            // Create end node for horizontal pipelines
+            if (!isVertical) {
+              const endNode = document.createElement("div");
+              endNode.className = "pipeline-node";
+              endNode.style.right = "0";
+              endNode.style.top = "0";
+              endNode.style.left = "auto";
+              endNode.style.transform = "translate(50%, -50%)";
+              pipeline.appendChild(endNode);
+            } else {
+              // End node for vertical pipelines
+              const endNode = document.createElement("div");
+              endNode.className = "pipeline-node";
+              endNode.style.left = "0";
+              endNode.style.bottom = "0";
+              endNode.style.top = "auto";
+              endNode.style.transform = "translate(-50%, 50%)";
+              pipeline.appendChild(endNode);
+            }
+
+            // Create moving data
+            const data = document.createElement("div");
+            data.className = "pipeline-data";
+            data.style.animationDelay = Math.random() * 2 + "s";
+
+            if (isVertical) {
+              data.style.top = "0";
+              data.style.left = "0";
+              data.style.transform = "translate(-50%, 0)";
+              data.style.animation = "moveDataVertical 4s infinite";
+            }
+
+            pipeline.appendChild(data);
+          }
+
+          // Add connection lines between elements
+          createConnectionLines();
+        }
+
+        // Create connection lines between elements
+        function createConnectionLines() {
+          const microservices = document.querySelectorAll(".microservice");
+          const servers = document.querySelectorAll(".cloud-server");
+          const terraform = document.querySelector(".terraform-element");
+          const kubernetes = document.querySelector(".kubernetes-element");
+          const docker = document.querySelectorAll(".docker-container");
+
+          // Connect microservices to each other
+          for (let i = 0; i < microservices.length - 1; i++) {
+            connectElements(microservices[i], microservices[i + 1]);
+          }
+
+          // Connect last microservice to first (complete the circle)
+          if (microservices.length > 1) {
+            connectElements(
+              microservices[microservices.length - 1],
+              microservices[0]
+            );
+          }
+
+          // Connect microservices to servers
+          microservices.forEach((micro, index) => {
+            if (servers[index % servers.length]) {
+              connectElements(micro, servers[index % servers.length]);
+            }
+          });
+
+          // Connect Kubernetes to microservices
+          if (kubernetes && microservices.length > 0) {
+            connectElements(kubernetes, microservices[0]);
+          }
+
+          // Connect Terraform to servers
+          if (terraform && servers.length > 0) {
+            connectElements(terraform, servers[0]);
+          }
+
+          // Connect Docker containers to Kubernetes
+          if (kubernetes) {
+            docker.forEach((container) => {
+              connectElements(container, kubernetes);
+            });
+          }
+        }
+
+        // Helper function to connect two elements with a line
+        function connectElements(elem1, elem2) {
+          if (!elem1 || !elem2) return;
+
+          const rect1 = elem1.getBoundingClientRect();
+          const rect2 = elem2.getBoundingClientRect();
+
+          const x1 = rect1.left + rect1.width / 2;
+          const y1 = rect1.top + rect1.height / 2;
+          const x2 = rect2.left + rect2.width / 2;
+          const y2 = rect2.top + rect2.height / 2;
+
+          const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+          const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+
+          const line = document.createElement("div");
+          line.className = "connection-line";
+          line.style.width = length + "px";
+          line.style.left = x1 + "px";
+          line.style.top = y1 + "px";
+          line.style.transformOrigin = "0 0";
+          line.style.transform = "rotate(" + angle + "deg)";
+          line.style.opacity = 0.2;
+
+          pipelineSystem.appendChild(line);
+        }
+
+        // Generate dynamic shooting data packets
+        function createDataPackets() {
+          setInterval(() => {
+            const packet = document.createElement("div");
+            packet.className = "data-package";
+
+            // Random starting position
+            packet.style.top = Math.random() * window.innerHeight + "px";
+            packet.style.left = Math.random() * window.innerWidth + "px";
+
+            // Random size
+            const size = 6 + Math.random() * 10;
+            packet.style.width = size + "px";
+            packet.style.height = size + "px";
+
+            // Random animation duration and delay
+            const duration = 5 + Math.random() * 10;
+            packet.style.animationDuration = duration + "s";
+
+            document.body.appendChild(packet);
+
+            // Remove after animation finishes
+            setTimeout(() => {
+              packet.remove();
+            }, duration * 1000);
+          }, 800);
+        }
+
+        // Update loading status
+        let currentStatus = 0;
+        function updateLoadingStatus() {
+          const intervalId = setInterval(() => {
+            if (currentStatus < statusMessages.length) {
+              loadingStatus.innerHTML =
+                statusMessages[currentStatus] +
+                '<span class="loading-dots"></span>';
+              currentStatus++;
+            } else {
+              clearInterval(intervalId);
+              // Reset the loop for demo purposes
+              currentStatus = 0;
+              updateLoadingStatus();
+            }
+          }, 2000);
+        }
+
+        // Initialize everything
+        createPipelines();
+        createDataPackets();
+        updateLoadingStatus();
+
+        // Handle window resize
+        window.addEventListener("resize", function () {
+          createPipelines();
+        });
+      });
+    </script>
   </body>
 </html>

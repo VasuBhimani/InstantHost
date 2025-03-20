@@ -1,9 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
-from app import mysql
+from app import get_db_connection  # Updated import
 import os
 from utils.aws_secrets import create_session
-import subprocess
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -22,21 +21,25 @@ def signup():
         password = request.form["password"]
         password_hash = generate_password_hash(password)
 
-        cur = mysql.connection.cursor()
+        # Get DB connection
+        conn = get_db_connection()
+        cur = conn.cursor(dictionary=True)
+
+        # Check if username already exists
         cur.execute("SELECT * FROM users WHERE username = %s", (username,))
         existing_user = cur.fetchone()
 
         if existing_user:
             flash("Username already exists!", "danger")
         else:
-            # temp = create_session(username,aws_access_key,aws_secret_key)
-            if create_session(username,aws_access_key,aws_secret_key):
+            # Create AWS session and add user if session is created successfully
+            if create_session(username, aws_access_key, aws_secret_key):
                 cur.execute("INSERT INTO users (username, password_hash) VALUES (%s, %s)", (username, password_hash))
-                mysql.connection.commit()
+                conn.commit()
                 cur.close()
+                conn.close()
                 flash("Signup successful! Please log in.", "success")
-        
-            return redirect(url_for("auth.login"))
+                return redirect(url_for("auth.login"))
 
     return render_template("signup.html")
 
@@ -45,14 +48,19 @@ def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-        
 
-        cur = mysql.connection.cursor()
+        # Get DB connection
+        conn = get_db_connection()
+        cur = conn.cursor(dictionary=True)
+
+        # Fetch user details
         cur.execute("SELECT * FROM users WHERE username = %s", (username,))
         user = cur.fetchone()
         cur.close()
+        conn.close()
 
-        if user and check_password_hash(user[2], password):
+        # Check if user exists and password matches
+        if user and check_password_hash(user["password_hash"], password):
             session["user"] = username
             os.makedirs(os.path.join("download", username), exist_ok=True)
             flash("Login successful!", "success")
