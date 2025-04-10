@@ -1,9 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
-from app import mongo  # Changed from mysql to mongo
+from extensions import mongo 
 import os
 from utils.aws_secrets import create_session
-import subprocess
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -22,21 +21,23 @@ def signup():
         password = request.form["password"]
         password_hash = generate_password_hash(password)
 
-        # Check if user exists
-        existing_user = mongo.db.users.find_one({"username": username})
+        # Get DB connection
+        conn = get_db_connection()
+        cur = conn.cursor(dictionary=True)
+
+        # Check if username already exists
+        cur.execute("SELECT * FROM users WHERE username = %s", (username,))
+        existing_user = cur.fetchone()
 
         if existing_user:
             flash("Username already exists!", "danger")
         else:
-            # temp = create_session(username,aws_access_key,aws_secret_key)
+            # Create AWS session and add user if session is created successfully
             if create_session(username, aws_access_key, aws_secret_key):
-                # Insert the new user
-                mongo.db.users.insert_one({
-                    "_id": username,
-                    "username": username, 
-                    "password_hash": password_hash,
-                    "projects": {} 
-                })
+                cur.execute("INSERT INTO users (username, password_hash) VALUES (%s, %s)", (username, password_hash))
+                conn.commit()
+                cur.close()
+                conn.close()
                 flash("Signup successful! Please log in.", "success")
                 return redirect(url_for("auth.login"))
 
@@ -47,11 +48,18 @@ def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-        
-        # Find user in MongoDB
-        user = mongo.db.users.find_one({"username": username})
 
-        # In MongoDB, we access fields by name instead of index
+        # Get DB connection
+        conn = get_db_connection()
+        cur = conn.cursor(dictionary=True)
+
+        # Fetch user details
+        cur.execute("SELECT * FROM users WHERE username = %s", (username,))
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        # Check if user exists and password matches
         if user and check_password_hash(user["password_hash"], password):
             session["user"] = username
             os.makedirs(os.path.join("download", username), exist_ok=True)

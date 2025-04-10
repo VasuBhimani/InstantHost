@@ -1159,30 +1159,8 @@
             <!-- Step 2: AWS Credentials -->
             <div class="form-step" id="step2">
               <div class="form-group">
-                <label class="form-label" for="aws_secret_key">
-                  <span class="label-icon">🔑</span> AWS Secret Key
-                </label>
-                <div class="password-container">
-                  <input
-                    type="password"
-                    id="aws_secret_key"
-                    name="aws_secret_key"
-                    class="form-input"
-                    placeholder="Enter your AWS Secret Key"
-                    required
-                  />
-                  <span
-                    id="toggleAwsSecretKey"
-                    class="toggle-password"
-                    onclick="togglePassword('aws_secret_key', 'toggleAwsSecretKey')"
-                    >👁️</span
-                  >
-                </div>
-              </div>
-
-              <div class="form-group">
                 <label class="form-label" for="aws_secret_id">
-                  <span class="label-icon">🔐</span> AWS Secret ID
+                  <span class="label-icon">🔑</span> AWS Access key
                 </label>
                 <div class="password-container">
                   <input
@@ -1190,13 +1168,35 @@
                     id="aws_secret_id"
                     name="aws_secret_id"
                     class="form-input"
+                    placeholder="Enter your AWS Secret Key"
+                    required
+                  />
+                  <span
+                    id="toggleAwsSecretKey"
+                    class="toggle-password"
+                    onclick="togglePassword('aws_secret_id', 'toggleAwsSecretKey')"
+                    >👁️</span
+                  >
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="aws_secret_key">
+                  <span class="label-icon">🔐</span> AWS Secret access key
+                </label>
+                <div class="password-container">
+                  <input
+                    type="password"
+                    id="aws_secret_key"
+                    name="aws_secret_key"
+                    class="form-input"
                     placeholder="Enter your AWS Secret ID"
                     required
                   />
                   <span
                     id="toggleAwsSecretId"
                     class="toggle-password"
-                    onclick="togglePassword('aws_secret_id', 'toggleAwsSecretId')"
+                    onclick="togglePassword('aws_secret_key', 'toggleAwsSecretId')"
                     >👁️</span
                   >
                 </div>

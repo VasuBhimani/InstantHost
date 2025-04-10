@@ -1,22 +1,24 @@
 from flask import Flask
-import mysql.connector  # Using mysql-connector-python
-from config import Config  # For MySQL config
+from extensions import mongo
+from urllib.parse import quote_plus
 
-# No need to initialize MySQL like before
-# mysql = MySQL()    # REMOVE THIS LINE
+# Encode password to handle special characters
+username = "InstantHost"
+password = "admin"  # Correct password
+encoded_password = quote_plus(password)
 
-# Create a connection function for MySQL
-def get_db_connection():
-    return mysql.connector.connect(
-        host=Config.MYSQL_HOST,
-        user=Config.MYSQL_USER,
-        password=Config.MYSQL_PASSWORD,
-        database=Config.MYSQL_DB
-    )
-
+# Correct MongoDB URI with target database
+# uri = f"mongodb+srv://{username}:{encoded_password}@instanthost.oasev.mongodb.net/InstantHostDB?retryWrites=true&w=majority"
+uri = "mongodb://10.255.255.254:27017/InstantHostDB"
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(Config)  # Load config
+
+    # Add a secret key for session management
+    app.secret_key = "your-super-secret-key"  # Change this to something secure
+
+    # MongoDB configuration
+    app.config["MONGO_URI"] = uri
+    mongo.init_app(app)  # Initialize MongoDB with the app
 
     # Register Blueprints (Routes)
     from routes.auth_routes import auth_bp
@@ -32,3 +34,5 @@ def create_app():
     app.register_blueprint(repo_bp_v1)
 
     return app
+
+

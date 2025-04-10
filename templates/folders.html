@@ -8,6 +8,10 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
     <style>
       /* Core styling and variables */
       :root {
@@ -34,7 +38,7 @@
         background-color: var(--dark);
         color: var(--light);
         min-height: 100vh;
-        overflow: hidden;
+        overflow-x: hidden;
         font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont,
           "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
         position: relative;
@@ -59,8 +63,11 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-image: linear-gradient(rgba(65, 78, 112, 0.05) 1px, transparent 1px),
-                          linear-gradient(90deg, rgba(65, 78, 112, 0.05) 1px, transparent 1px);
+        background-image: linear-gradient(
+            rgba(65, 78, 112, 0.05) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(65, 78, 112, 0.05) 1px, transparent 1px);
         background-size: 40px 40px;
         pointer-events: none;
       }
@@ -333,7 +340,11 @@
       }
 
       .btn-primary {
-        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        background: linear-gradient(
+          135deg,
+          var(--primary),
+          var(--primary-dark)
+        );
         border: none;
         transition: var(--transition-smooth);
         box-shadow: 0 4px 6px rgba(79, 70, 229, 0.25);
@@ -440,6 +451,57 @@
         color: #67e8f9;
       }
 
+      #loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+  }
+
+  .loading-container {
+    background: var(--glass);
+    border-radius: 16px;
+    border: 1px solid var(--glass-border);
+    padding: 2rem;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  .loading-spinner {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    border: 5px solid rgba(79, 70, 229, 0.2);
+    border-radius: 50%;
+    border-top-color: var(--primary);
+    animation: spin 1s ease-in-out infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .loading-text {
+    color: var(--light);
+    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+  }
+  
+  .loading-details {
+    color: var(--gray);
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+  }
+
       /* Keyframes for animations */
       @keyframes fadeIn {
         from {
@@ -453,98 +515,224 @@
       }
 
       @keyframes extendPipeline {
-        0%, 20% { width: 0; opacity: 0.1; }
-        50%, 70% { width: 100px; opacity: 0.5; }
-        100% { width: 0; opacity: 0.1; }
+        0%,
+        20% {
+          width: 0;
+          opacity: 0.1;
+        }
+        50%,
+        70% {
+          width: 100px;
+          opacity: 0.5;
+        }
+        100% {
+          width: 0;
+          opacity: 0.1;
+        }
       }
 
       @keyframes extendPipelineVertical {
-        0%, 20% { height: 0; opacity: 0.1; }
-        50%, 70% { height: 100px; opacity: 0.5; }
-        100% { height: 0; opacity: 0.1; }
+        0%,
+        20% {
+          height: 0;
+          opacity: 0.1;
+        }
+        50%,
+        70% {
+          height: 100px;
+          opacity: 0.5;
+        }
+        100% {
+          height: 0;
+          opacity: 0.1;
+        }
       }
 
       @keyframes moveData {
-        0%, 20% { left: 0; opacity: 0; }
-        30% { opacity: 1; }
-        70% { left: 100px; opacity: 1; }
-        80%, 100% { left: 100px; opacity: 0; }
+        0%,
+        20% {
+          left: 0;
+          opacity: 0;
+        }
+        30% {
+          opacity: 1;
+        }
+        70% {
+          left: 100px;
+          opacity: 1;
+        }
+        80%,
+        100% {
+          left: 100px;
+          opacity: 0;
+        }
       }
 
       @keyframes moveDataVertical {
-        0%, 20% { top: 0; opacity: 0; }
-        30% { opacity: 1; }
-        70% { top: 100px; opacity: 1; }
-        80%, 100% { top: 100px; opacity: 0; }
+        0%,
+        20% {
+          top: 0;
+          opacity: 0;
+        }
+        30% {
+          opacity: 1;
+        }
+        70% {
+          top: 100px;
+          opacity: 1;
+        }
+        80%,
+        100% {
+          top: 100px;
+          opacity: 0;
+        }
       }
 
       @keyframes serverPulse {
-        0% { opacity: 0.5; }
-        100% { opacity: 1; }
+        0% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
       }
 
       @keyframes serverProgress {
-        0% { width: 0; }
-        50% { width: 70%; }
-        100% { width: 0; }
+        0% {
+          width: 0;
+        }
+        50% {
+          width: 70%;
+        }
+        100% {
+          width: 0;
+        }
       }
 
       @keyframes codeLine {
-        0%, 10% { transform: translateX(0); }
-        40%, 60% { transform: translateX(-50%); }
-        90%, 100% { transform: translateX(-100%); }
+        0%,
+        10% {
+          transform: translateX(0);
+        }
+        40%,
+        60% {
+          transform: translateX(-50%);
+        }
+        90%,
+        100% {
+          transform: translateX(-100%);
+        }
       }
 
       @keyframes moveRobot {
-        0% { transform: translate(0, 0) rotate(0deg); }
-        25% { transform: translate(100px, 100px) rotate(90deg); }
-        50% { transform: translate(0, 200px) rotate(180deg); }
-        75% { transform: translate(-100px, 100px) rotate(270deg); }
-        100% { transform: translate(0, 0) rotate(360deg); }
+        0% {
+          transform: translate(0, 0) rotate(0deg);
+        }
+        25% {
+          transform: translate(100px, 100px) rotate(90deg);
+        }
+        50% {
+          transform: translate(0, 200px) rotate(180deg);
+        }
+        75% {
+          transform: translate(-100px, 100px) rotate(270deg);
+        }
+        100% {
+          transform: translate(0, 0) rotate(360deg);
+        }
       }
 
       @keyframes blinkEye {
-        0%, 48%, 52%, 100% { background: var(--light); }
-        50% { background: var(--primary); }
+        0%,
+        48%,
+        52%,
+        100% {
+          background: var(--light);
+        }
+        50% {
+          background: var(--primary);
+        }
       }
 
       @keyframes moveArmLeft {
-        0%, 100% { transform: rotate(0deg); }
-        50% { transform: rotate(-45deg); }
+        0%,
+        100% {
+          transform: rotate(0deg);
+        }
+        50% {
+          transform: rotate(-45deg);
+        }
       }
 
       @keyframes moveArmRight {
-        0%, 100% { transform: rotate(0deg); }
-        50% { transform: rotate(45deg); }
+        0%,
+        100% {
+          transform: rotate(0deg);
+        }
+        50% {
+          transform: rotate(45deg);
+        }
       }
 
       @keyframes floatingData {
-        0% { transform: translate(0, 0) rotate(0deg); }
-        25% { transform: translate(300px, -100px) rotate(90deg); }
-        50% { transform: translate(400px, 200px) rotate(180deg); }
-        75% { transform: translate(100px, 300px) rotate(270deg); }
-        100% { transform: translate(0, 0) rotate(360deg); }
+        0% {
+          transform: translate(0, 0) rotate(0deg);
+        }
+        25% {
+          transform: translate(300px, -100px) rotate(90deg);
+        }
+        50% {
+          transform: translate(400px, 200px) rotate(180deg);
+        }
+        75% {
+          transform: translate(100px, 300px) rotate(270deg);
+        }
+        100% {
+          transform: translate(0, 0) rotate(360deg);
+        }
       }
 
       @keyframes pulseLine {
-        0%, 100% { opacity: 0.1; }
-        50% { opacity: 0.5; }
+        0%,
+        100% {
+          opacity: 0.1;
+        }
+        50% {
+          opacity: 0.5;
+        }
       }
 
       @keyframes floatServer {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
       }
 
       @keyframes floatCodeBlock {
-        0%, 100% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(-15px) rotate(1deg); }
+        0%,
+        100% {
+          transform: translateY(0) rotate(0deg);
+        }
+        50% {
+          transform: translateY(-15px) rotate(1deg);
+        }
       }
 
       @keyframes floatMicroservice {
-        0%, 100% { transform: translateY(0) rotate(0deg); }
-        33% { transform: translateY(-8px) rotate(1deg); }
-        66% { transform: translateY(5px) rotate(-1deg); }
+        0%,
+        100% {
+          transform: translateY(0) rotate(0deg);
+        }
+        33% {
+          transform: translateY(-8px) rotate(1deg);
+        }
+        66% {
+          transform: translateY(5px) rotate(-1deg);
+        }
       }
     </style>
   </head>
@@ -553,7 +741,7 @@
     <div class="visualization-area">
       <!-- Grid overlay for tech feel -->
       <div class="grid-overlay"></div>
-      
+
       <!-- Dynamic pipeline system (will be generated by JS) -->
       <div id="pipeline-system" class="pipeline-system"></div>
 
@@ -636,24 +824,21 @@
     <!-- Upper Panel code start -->
     <nav class="navbar navbar-expand-lg navbar-dark">
       <div class="container-fluid">
-        <!-- Back Button -->
         <button class="btn btn-secondary me-2" onclick="window.history.back();">
           <i class="fas fa-arrow-left me-1"></i> Back
         </button>
-
         <div class="ms-auto d-flex align-items-center">
-          <!-- Profile Name from Session -->
-          <span class="text-white me-3">Welcome, {{ session.get('user', 'Guest') }}</span>
-
-          <!-- Logout Button -->
+          <span class="text-white me-3"
+            >Welcome, {{ session.get('user', 'Guest') }}</span
+          >
           <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">
             <i class="fas fa-sign-out-alt me-1"></i> Logout
           </a>
         </div>
       </div>
     </nav>
-    <!-- Upper Panel code ends  -->
-     
+    <!-- Upper Panel code ends -->
+
     <div class="container">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Folder Management</h1>
@@ -663,55 +848,95 @@
       </div>
 
       <!-- Flash messages -->
-      {% with messages = get_flashed_messages(with_categories=true) %} 
-        {% if messages %}
-          <div>
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-              </div>
-            {% endfor %}
-          </div>
-        {% endif %} 
-      {% endwith %}
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <div>
+        {% for category, message in messages %}
+        <div
+          class="alert alert-{{ category }} alert-dismissible fade show"
+          role="alert"
+        >
+          {{ message }}
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+          ></button>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %} {% endwith %}
 
       <div class="list-group">
         {% for folder in folders %}
-          <div class="list-group-item d-flex justify-content-between align-items-center">
-            <span>{{ folder }}</span>
-            <div>
-              <!-- New combined Edit & Delete button redirecting to flask_v1 -->
-              <a href="{{ url_for('flask_v1_bp.flask_v1', folder_name=folder) }}" class="btn btn-info btn-sm me-2">
-                <i class="fas fa-cogs me-1"></i> Edit & Delete
-              </a>
-              
-              <!-- Existing Edit button -->
-              <a href="{{ url_for('folder.edit_folder', folder_name=folder) }}" class="btn btn-warning btn-sm me-2">
-                <i class="fas fa-edit me-1"></i> Edit
-              </a>
+        <div
+          class="list-group-item d-flex justify-content-between align-items-center"
+        >
+          <span>{{ folder.name }}</span>
+          <div>
+            <!-- URL Button -->
+            {% if folder.endpoint_url %}
+            <button
+              onclick="openExactUrl('{{ folder.endpoint_url }}')"
+              class="btn btn-info btn-sm me-2"
+            >
+              <i class="fas fa-external-link-alt me-1"></i> Open URL
+            </button>
+            {% endif %}
+            
 
-              <!-- Form for deleting the folder -->
-              <form action="{{ url_for('folder.delete_folder', folder_name=folder) }}" method="POST" style="display: inline">
-                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this folder?');">
-                  <i class="fas fa-trash-alt me-1"></i> Delete
-                </button>
-              </form>
-            </div>
+            {% if folder.endpoint_url %}
+            <a
+              href="{{ url_for('folder.destroy', folder_name=folder.name) }}"
+              class="btn btn-danger btn-sm me-2"
+            >
+              <i class="fas fa-edit me-1"></i> Destroy
+            </a>
+            {% endif %}
+
+
+            <!-- Edit Button -->
+            <a
+              href="{{ url_for('folder.edit_folder', folder_name=folder.name) }}"
+              class="btn btn-warning btn-sm me-2"
+            >
+              <i class="fas fa-edit me-1"></i> Edit
+            </a>
+
+
+            <!-- Delete Form -->
+            <form
+              action="{{ url_for('folder.delete_folder', folder_name=folder.name) }}"
+              method="POST"
+              style="display: inline"
+            >
+              <button
+                type="submit"
+                class="btn btn-danger btn-sm"
+                onclick="return confirm('Are you sure you want to delete this folder?');"
+              >
+                <i class="fas fa-trash-alt me-1"></i> Delete
+              </button>
+            </form>
           </div>
+        </div>
         {% endfor %}
       </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
     <script>
       window.addEventListener("pageshow", function (event) {
         if (event.persisted || performance.navigation.type === 2) {
           location.reload();
         }
       });
+
+      // Function to open the exact URL as stored in the database
+      function openExactUrl(url) {
+        window.open(url, "_blank");
+      }
 
       // Generate dynamic CI/CD pipelines
       document.addEventListener("DOMContentLoaded", function () {
@@ -876,6 +1101,69 @@
           createPipelines();
         });
       });
+
+      // ---------------------------------------------------------------------------------------------
+
+      document.addEventListener("DOMContentLoaded", function() {
+    // Check if we're in a destroy operation by looking for folder_name in template
+    const folderName = "{{ folder_name|default('') }}";
+    
+    if (folderName) {
+      // Show loading overlay immediately if we're on a destroy page
+      document.getElementById('loading-overlay').style.display = 'flex';
+      
+      // Setup cancel button
+      document.getElementById('cancel-operation').onclick = function() {
+        document.getElementById('loading-overlay').style.display = 'none';
+        window.location.href = "{{ url_for('folder.folder_disply') }}"; // Redirect to folder list
+      };
+      
+      // Start checking operation status
+      checkDestroyStatus(folderName);
+    }
+    
+    // Modify all destroy links to show confirmation
+    const destroyLinks = document.querySelectorAll('a[href*="/folder/destroy/"]');
+    destroyLinks.forEach(link => {
+      link.onclick = function(e) {
+        if (!confirm('Are you sure you want to destroy this infrastructure? This action cannot be undone.')) {
+          e.preventDefault();
+        }
+      };
+    });
+  });
+  
+  // Function to check operation status
+  function checkDestroyStatus(folderName) {
+    // Poll the server to check if operation is complete
+    const statusInterval = setInterval(() => {
+      fetch(`/folder/status/${folderName}`)
+        .then(response => response.json())
+        .then(data => {
+          console.log("Status check:", data);
+          
+          if (data.status === 'complete') {
+            clearInterval(statusInterval);
+            document.getElementById('loading-overlay').style.display = 'none';
+            
+            // Show success message and redirect
+            alert('Infrastructure successfully destroyed!');
+            window.location.href = "{{ url_for('folder.folder_disply') }}";
+          } 
+          else if (data.status === 'failed') {
+            clearInterval(statusInterval);
+            document.getElementById('loading-overlay').style.display = 'none';
+            
+            // Show error message
+            alert('Operation failed: ' + (data.message || 'Unknown error'));
+            window.location.href = "{{ url_for('folder.folder_disply') }}";
+          }
+        })
+        .catch(error => {
+          console.error('Error checking status:', error);
+        });
+    }, 1000); // Check every 3 seconds
+  }
     </script>
   </body>
 </html>

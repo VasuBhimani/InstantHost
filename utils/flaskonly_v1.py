@@ -3,22 +3,10 @@ import time
 import os
 import tempfile
 import json
+from extensions import mongo
 
-def fun_flaskonly_v1(session_name, dockerfile_path, image_name, terraform_dir, port_no=8123, aws_region="us-east-1"):
-    """
-    Build a Docker image and deploy it to AWS ECS Fargate with load balancing.
-    
-    Args:
-        session_name: Name of the tmux session to use
-        dockerfile_path: Path to the Dockerfile
-        image_name: Name for the Docker image
-        terraform_dir: Directory containing Terraform scripts
-        port_no: Port number the container exposes (default: 8123)
-        aws_region: AWS region to deploy to (default: us-east-1)
-        
-    Returns:
-        dict: Deployment status and endpoint URL if successful
-    """
+def fun_flaskonly_v1(session_name, dockerfile_path, image_name, terraform_dir, port_no, aws_region,cleanup_on_failure=True):
+
     # IMPORTANT: Make sure port_no is an integer
     port_no = int(port_no)
     
@@ -35,15 +23,24 @@ def fun_flaskonly_v1(session_name, dockerfile_path, image_name, terraform_dir, p
     try:
         # Step 1: Build Docker image and push to ECR
         if not _build_docker_image(session_name, dockerfile_path, image_name, build_script, aws_region):
-            return {"status": "error", "message": "Docker build failed"}
+          if cleanup_on_failure:
+                print("Build failed. Cleaning up any created resources...")
+                # cleanup_terraform_and_ecr(session_name, terraform_dir, image_name, aws_region)
+          return {"status": "error", "message": "Docker build failed"}
         
         # Step 2: Deploy with Terraform
         print("Docker build successful. Deploying with Terraform...")
         endpoint_url = _deploy_terraform(session_name, terraform_dir, image_name, port_no, aws_region)
         
         if not endpoint_url:
-            return {"status": "error", "message": "Terraform deployment failed"}
+          if cleanup_on_failure:
+              print("Deployment failed. Cleaning up created resources...")
+              # cleanup_terraform_and_ecr(session_name, terraform_dir, image_name, aws_region)
+          return {"status": "error", "message": "Terraform deployment failed"}
         
+        change_dir = '''cd ../../../../'''
+        _run_in_tmux(session_name, change_dir)
+
         print(f"Deployment successful! Endpoint URL: {endpoint_url}")
         return {
             "status": "success",
@@ -55,9 +52,6 @@ def fun_flaskonly_v1(session_name, dockerfile_path, image_name, terraform_dir, p
         # Clean up temporary files
         if os.path.exists(build_script):
             os.remove(build_script)
-
-
-
 
 def _ensure_tmux_session(session_name):
     """Ensure the tmux session exists, create if it doesn't"""
@@ -101,7 +95,6 @@ echo "BUILD_COMPLETE"
     # Make executable
     os.chmod(script_path, 0o755)
     return script_path
-
 
 def _run_in_tmux(session_name, command, wait_for_output=False, output_file=None):
     """Run a command in the tmux session and optionally wait for output"""
@@ -206,8 +199,9 @@ echo "ECR_PUSH_SUCCESS"
                 push_cmd = f"{push_script} > {output_file} 2>&1"
                 _run_in_tmux(session_name, push_cmd)
                 
+                time.sleep(2)
                 # Wait for script to complete
-                max_wait_time = 300  # 5 minutes
+                max_wait_time = 600  # 5 minutes
                 start_time = time.time()
                 while time.time() - start_time < max_wait_time:
                     if os.path.exists(output_file):
@@ -223,7 +217,6 @@ echo "ECR_PUSH_SUCCESS"
     
     print("Docker build or push failed or timed out")
     return False
-
 
 def _deploy_terraform(session_name, terraform_dir, image_name, port_no, aws_region):
     """Deploy with Terraform in tmux session"""
@@ -256,9 +249,6 @@ def _deploy_terraform(session_name, terraform_dir, image_name, port_no, aws_regi
     
     print("Terraform deployment failed or didn't produce an endpoint URL")
     return None
-
-
-
 
 def _create_terraform_files(terraform_dir, aws_region, force_recreate=False):
     """Create Terraform files with explicit type handling for container port"""
@@ -570,3 +560,100 @@ resource "aws_appautoscaling_policy" "app_memory" {
 output "load_balancer_url" {
   value = "http://${aws_lb.app_lb.dns_name}"
 }''')
+
+def cleanup_terraform_and_ecr(session_name, terraform_dir, image_name, aws_region="us-east-1"):
+
+    print(f"Starting destruction of deployment in tmux session: {session_name}")
+    print("10 sec timmer start")
+    time.sleep(10)
+    # Ensure tmux session exists
+    if not _ensure_tmux_session(session_name):
+        return {"status": "error", "message": "Failed to create tmux session"}
+    
+    # Create temp output file for tracking progress
+    output_file = tempfile.mktemp()
+    
+    # Step 1: Destroy Terraform resources
+    print("Destroying Terraform resources...")
+    print(terraform_dir)
+    
+    terraform_destroy_cmd = f"""cd {terraform_dir} && \
+    echo "Starting Terraform destroy process..." && \
+    terraform destroy -auto-approve && \
+    echo "TERRAFORM_DESTROY_COMPLETE" > {output_file}
+    """
+    
+    _run_in_tmux(session_name, terraform_destroy_cmd)
+    
+
+    max_wait_time = 1000  # 16 approx minutes
+    start_time = time.time()
+    terraform_destroyed = False
+    
+    while time.time() - start_time < max_wait_time:
+        if os.path.exists(output_file):
+            with open(output_file, 'r') as f:
+                content = f.read()
+                if 'TERRAFORM_DESTROY_COMPLETE' in content:
+                    terraform_destroyed = True
+                    print("Terraform resources successfully destroyed.")
+                    break
+        time.sleep(5)
+    
+    if not terraform_destroyed:
+        return {"status": "error", "message": "Terraform destroy timed out or failed"}
+    
+    # Step 2: Delete ECR repository
+    print(f"Deleting ECR repository: {image_name}...")
+    
+    delete_ecr_cmd = f"""
+    echo "Deleting ECR repository: {image_name}..." && \
+    aws ecr delete-repository --repository-name {image_name} --force --region {aws_region} && \
+    echo "ECR_DELETE_COMPLETE" > {output_file}
+    """
+    
+    _run_in_tmux(session_name, delete_ecr_cmd)
+    
+    # Wait for ECR deletion to complete
+    ecr_start_time = time.time()
+    ecr_deleted = False
+    
+    while time.time() - ecr_start_time < 120:  # 2 minutes timeout for ECR
+        if os.path.exists(output_file):
+            with open(output_file, 'r') as f:
+                content = f.read()
+                if 'ECR_DELETE_COMPLETE' in content:
+                    ecr_deleted = True
+                    print("ECR repository successfully deleted.")
+                    break
+        time.sleep(2)
+    
+    if ecr_deleted:
+        mongo.db.users.update_one(
+                  { "username": session_name },  
+                  {
+                      "$set": {
+                          f"projects.{image_name}.exposed_port": "",
+                          f"projects.{image_name}.endpoint_url": ""
+                      }
+                  }
+              )
+        change_dir = '''cd ../../../../'''
+        _run_in_tmux(session_name, change_dir)
+        return {
+            "status": "success",
+            "message": "All resources successfully destroyed",
+            "details": {
+                "terraform_destroyed": True,
+                "ecr_deleted": True
+            }
+        }
+    else:
+        return {
+            "status": "partial_success",
+            "message": "Terraform resources destroyed, but ECR deletion failed or timed out",
+            "details": {
+                "terraform_destroyed": True,
+                "ecr_deleted": False
+            }
+        }

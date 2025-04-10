@@ -951,37 +951,37 @@
     </div>
 
     <script>
-      function checkTaskStatus1() {
-        fetch("/check_task_status1")
+    //   function checkTaskStatus1() {
+    //     fetch("/check_task_status1")
+    //       .then((response) => response.json())
+    //       .then((data) => {
+    //         if (data.status === "complete") {
+    //           window.location.href = data.redirect;
+    //         } else {
+    //           setTimeout(checkTaskStatus1, 2000);
+    //         }
+    //       });
+    //   }
+
+    //   document.addEventListener("DOMContentLoaded", function () {
+    //     setTimeout(checkTaskStatus1, 1000);
+    //   });
+
+      function checkTaskStatus() {
+        fetch("/check_task_status")
           .then((response) => response.json())
           .then((data) => {
             if (data.status === "complete") {
               window.location.href = data.redirect;
             } else {
-              setTimeout(checkTaskStatus1, 2000);
+              setTimeout(checkTaskStatus, 1000);
             }
           });
       }
 
       document.addEventListener("DOMContentLoaded", function () {
-        setTimeout(checkTaskStatus1, 1000);
+        setTimeout(checkTaskStatus, 1000);
       });
-
-      // function checkTaskStatus() {
-      //   fetch("/check_task_status")
-      //     .then((response) => response.json())
-      //     .then((data) => {
-      //       if (data.status === "complete") {
-      //         window.location.href = data.redirect;
-      //       } else {
-      //         setTimeout(checkTaskStatus, 1000);
-      //       }
-      //     });
-      // }
-
-      // document.addEventListener("DOMContentLoaded", function () {
-      //   setTimeout(checkTaskStatus, 1000);
-      // });
 
       // Check the status of the task to change pagw
       // function checkStatus() {
