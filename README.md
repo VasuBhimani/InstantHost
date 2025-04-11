@@ -6,7 +6,7 @@ Welcome to **InstantHost**, an innovative project under active development! This
 
 This project is actively evolving, and we welcome your contributions and feedback to make it even better.
 
-If you'd like to try the beta version of InstantHost, **check out the `without_ml` branch**. This branch contains the latest experimental features.
+If you'd like to try the beta version of InstantHost, **check out the [`without_ml`](https://github.com/VasuBhimani/InstantHost/tree/without_ml) branch**. This branch contains the latest experimental features.
 
 ![Development in Progress](static/loading.png)
 
