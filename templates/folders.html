@@ -39,6 +39,7 @@
         color: var(--light);
         min-height: 100vh;
         overflow-x: hidden;
+        overflow-y: hidden;
         font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont,
           "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
         position: relative;
@@ -452,55 +453,57 @@
       }
 
       #loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    z-index: 9999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(5px);
-  }
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(5px);
+      }
 
-  .loading-container {
-    background: var(--glass);
-    border-radius: 16px;
-    border: 1px solid var(--glass-border);
-    padding: 2rem;
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  }
+      .loading-container {
+        background: var(--glass);
+        border-radius: 16px;
+        border: 1px solid var(--glass-border);
+        padding: 2rem;
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      }
 
-  .loading-spinner {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 1.5rem;
-    border: 5px solid rgba(79, 70, 229, 0.2);
-    border-radius: 50%;
-    border-top-color: var(--primary);
-    animation: spin 1s ease-in-out infinite;
-  }
+      .loading-spinner {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        border: 5px solid rgba(79, 70, 229, 0.2);
+        border-radius: 50%;
+        border-top-color: var(--primary);
+        animation: spin 1s ease-in-out infinite;
+      }
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
 
-  .loading-text {
-    color: var(--light);
-    margin-bottom: 1.5rem;
-    font-size: 1.2rem;
-  }
-  
-  .loading-details {
-    color: var(--gray);
-    margin-bottom: 1.5rem;
-    font-size: 0.9rem;
-  }
+      .loading-text {
+        color: var(--light);
+        margin-bottom: 1.5rem;
+        font-size: 1.2rem;
+      }
+
+      .loading-details {
+        color: var(--gray);
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+      }
 
       /* Keyframes for animations */
       @keyframes fadeIn {
@@ -883,10 +886,7 @@
             >
               <i class="fas fa-external-link-alt me-1"></i> Open URL
             </button>
-            {% endif %}
-            
-
-            {% if folder.endpoint_url %}
+            {% endif %} {% if folder.endpoint_url %}
             <a
               href="{{ url_for('folder.destroy', folder_name=folder.name) }}"
               class="btn btn-danger btn-sm me-2"
@@ -895,7 +895,6 @@
             </a>
             {% endif %}
 
-
             <!-- Edit Button -->
             <a
               href="{{ url_for('folder.edit_folder', folder_name=folder.name) }}"
@@ -903,7 +902,6 @@
             >
               <i class="fas fa-edit me-1"></i> Edit
             </a>
-
 
             <!-- Delete Form -->
             <form
@@ -1104,66 +1102,73 @@
 
       // ---------------------------------------------------------------------------------------------
 
-      document.addEventListener("DOMContentLoaded", function() {
-    // Check if we're in a destroy operation by looking for folder_name in template
-    const folderName = "{{ folder_name|default('') }}";
-    
-    if (folderName) {
-      // Show loading overlay immediately if we're on a destroy page
-      document.getElementById('loading-overlay').style.display = 'flex';
-      
-      // Setup cancel button
-      document.getElementById('cancel-operation').onclick = function() {
-        document.getElementById('loading-overlay').style.display = 'none';
-        window.location.href = "{{ url_for('folder.folder_disply') }}"; // Redirect to folder list
-      };
-      
-      // Start checking operation status
-      checkDestroyStatus(folderName);
-    }
-    
-    // Modify all destroy links to show confirmation
-    const destroyLinks = document.querySelectorAll('a[href*="/folder/destroy/"]');
-    destroyLinks.forEach(link => {
-      link.onclick = function(e) {
-        if (!confirm('Are you sure you want to destroy this infrastructure? This action cannot be undone.')) {
-          e.preventDefault();
+      document.addEventListener("DOMContentLoaded", function () {
+        // Check if we're in a destroy operation by looking for folder_name in template
+        const folderName = "{{ folder_name|default('') }}";
+
+        if (folderName) {
+          // Show loading overlay immediately if we're on a destroy page
+          document.getElementById("loading-overlay").style.display = "flex";
+
+          // Setup cancel button
+          document.getElementById("cancel-operation").onclick = function () {
+            document.getElementById("loading-overlay").style.display = "none";
+            window.location.href = "{{ url_for('folder.folder_disply') }}"; // Redirect to folder list
+          };
+
+          // Start checking operation status
+          checkDestroyStatus(folderName);
         }
-      };
-    });
-  });
-  
-  // Function to check operation status
-  function checkDestroyStatus(folderName) {
-    // Poll the server to check if operation is complete
-    const statusInterval = setInterval(() => {
-      fetch(`/folder/status/${folderName}`)
-        .then(response => response.json())
-        .then(data => {
-          console.log("Status check:", data);
-          
-          if (data.status === 'complete') {
-            clearInterval(statusInterval);
-            document.getElementById('loading-overlay').style.display = 'none';
-            
-            // Show success message and redirect
-            alert('Infrastructure successfully destroyed!');
-            window.location.href = "{{ url_for('folder.folder_disply') }}";
-          } 
-          else if (data.status === 'failed') {
-            clearInterval(statusInterval);
-            document.getElementById('loading-overlay').style.display = 'none';
-            
-            // Show error message
-            alert('Operation failed: ' + (data.message || 'Unknown error'));
-            window.location.href = "{{ url_for('folder.folder_disply') }}";
-          }
-        })
-        .catch(error => {
-          console.error('Error checking status:', error);
+
+        // Modify all destroy links to show confirmation
+        const destroyLinks = document.querySelectorAll(
+          'a[href*="/folder/destroy/"]'
+        );
+        destroyLinks.forEach((link) => {
+          link.onclick = function (e) {
+            if (
+              !confirm(
+                "Are you sure you want to destroy this infrastructure? This action cannot be undone."
+              )
+            ) {
+              e.preventDefault();
+            }
+          };
         });
-    }, 1000); // Check every 3 seconds
-  }
+      });
+
+      // Function to check operation status
+      function checkDestroyStatus(folderName) {
+        // Poll the server to check if operation is complete
+        const statusInterval = setInterval(() => {
+          fetch(`/folder/status/${folderName}`)
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("Status check:", data);
+
+              if (data.status === "complete") {
+                clearInterval(statusInterval);
+                document.getElementById("loading-overlay").style.display =
+                  "none";
+
+                // Show success message and redirect
+                alert("Infrastructure successfully destroyed!");
+                window.location.href = "{{ url_for('folder.folder_disply') }}";
+              } else if (data.status === "failed") {
+                clearInterval(statusInterval);
+                document.getElementById("loading-overlay").style.display =
+                  "none";
+
+                // Show error message
+                alert("Operation failed: " + (data.message || "Unknown error"));
+                window.location.href = "{{ url_for('folder.folder_disply') }}";
+              }
+            })
+            .catch((error) => {
+              console.error("Error checking status:", error);
+            });
+        }, 1000); // Check every 3 seconds
+      }
     </script>
   </body>
 </html>
