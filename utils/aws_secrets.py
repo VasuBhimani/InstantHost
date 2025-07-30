@@ -6,17 +6,20 @@ import subprocess
 import os
 
 def create_session(username,aws_access_key,aws_secret_key):
-    region = "us-east-1"
-    cloud_name = "aws"
     
-    if cloud_name == "aws":
-        save_file_aws(username,aws_access_key,aws_secret_key,region,cloud_name)
-    elif cloud_name == "azure":
-        save_file_azure(username,aws_access_key,aws_secret_key,region,cloud_name)
-    elif cloud_name == "gcp":
-        save_file_gcp(username,aws_access_key,aws_secret_key,region,cloud_name)
-    else:
-        print("no cloud in list")
+    #----------------------------------------------------------------------------------------
+    # region = "us-east-1"
+    # cloud_name = "aws"
+    
+    # if cloud_name == "aws":
+    #     save_file_aws(username,aws_access_key,aws_secret_key,region,cloud_name)
+    # elif cloud_name == "azure":
+    #     save_file_azure(username,aws_access_key,aws_secret_key,region,cloud_name)
+    # elif cloud_name == "gcp":
+    #     save_file_gcp(username,aws_access_key,aws_secret_key,region,cloud_name)
+    # else:
+    #     print("no cloud in list")
+    #----------------------------------------------------------------------------------------
 
     session_name = username  # Use the username as the tmux session name
     # Create a new tmux session in detached mode
@@ -46,13 +49,12 @@ def create_session(username,aws_access_key,aws_secret_key):
         return f"Error: {e}"
     
     
-def save_file_aws(username, aws_access_key, aws_secret_key, region, cloud_name):
+def save_file_aws(username, aws_access_key, aws_secret_key, region):
     # Directory path for user
     file_dir = f"download/{username}/"
     os.makedirs(file_dir, exist_ok=True)
 
-    # ✅ Final path = directory + cloud_name (keeps your filename)
-    file_path = os.path.join(file_dir, cloud_name)
+    file_path = os.path.join(file_dir, "aws")
 
     content = f"""export AWS_ACCESS_KEY_ID="{aws_access_key}"
 export AWS_SECRET_ACCESS_KEY="{aws_secret_key}"
@@ -64,18 +66,18 @@ export AWS_DEFAULT_REGION="{region}"
 
     return f"Credentials saved to {file_path}"
 
-def save_file_azure(username, aws_access_key, aws_secret_key, region, cloud_name):
+def save_file_azure(username, client_id, secret, tenant_id, subscription_id):
     # Directory path for user
     file_dir = f"download/{username}/"
     os.makedirs(file_dir, exist_ok=True)
 
     # ✅ Final path = directory + cloud_name (keeps your filename)
-    file_path = os.path.join(file_dir, cloud_name)
+    file_path = os.path.join(file_dir, "azure")
 
-    content = f"""export AZURE_CLIENT_ID="{your_client_id}"
-export AZURE_SECRET="{your_client_secret}"
-export AZURE_TENANT_ID="{your_tenant_id}"
-export AZURE_SUBSCRIPTION_ID="{your_subscription_id}"
+    content = f"""export AZURE_CLIENT_ID="{client_id}"
+export AZURE_SECRET="{secret}"
+export AZURE_TENANT_ID="{tenant_id}"
+export AZURE_SUBSCRIPTION_ID="{subscription_id}"
 """
 
     with open(file_path, "w") as f:

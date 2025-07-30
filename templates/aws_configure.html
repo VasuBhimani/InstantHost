@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>AWS Credentials</title>
+  </head>
+  <body>
+    <h2>Enter AWS Credentials</h2>
+    <form method="POST" action="{{ url_for('reconfigure.aws_save_data') }}">
+      <label for="AWS_ACCESS_KEY_ID">AWS_ACCESS_KEY_ID:</label><br />
+      <input
+        type="text"
+        id="AWS_ACCESS_KEY_ID"
+        name="AWS_ACCESS_KEY_ID"
+        required
+      /><br /><br />
+
+      <label for="AWS_SECRET_ACCESS_KEY">AWS_SECRET_ACCESS_KEY:</label><br />
+      <input
+        type="password"
+        id="AWS_SECRET_ACCESS_KEY"
+        name="AWS_SECRET_ACCESS_KEY"
+        required
+      /><br /><br />
+
+      <label for="AWS_DEFAULT_REGION">AWS_DEFAULT_REGION:</label><br />
+      <input
+        type="text"
+        id="AWS_DEFAULT_REGION"
+        name="AWS_DEFAULT_REGION"
+        required
+      /><br /><br />
+
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>

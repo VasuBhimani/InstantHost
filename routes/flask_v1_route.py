@@ -50,7 +50,6 @@ def flask_v1():
         
     aws_region = "us-east-1"
     port_no = exposed_port
-    # port_no=8123
     
     print("Python project docker file creation started")
     thread = threading.Thread(target=testing_for_flask_v1, args=(session_name, dockerfile_path, image_name, terraform_dir, port_no, aws_region))

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cloud Account Checker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .cloud-box { border: 1px solid #ccc; padding: 15px; margin: 10px; border-radius: 8px; }
+        h2 { color: #2c3e50; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; white-space: pre-wrap; }
+        .btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 14px;
+            background: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+        }
+        .btn:hover { background: #1a252f; }
+    </style>
+</head>
+<body>
+    <h1>Connected Cloud Accounts</h1>
+
+    <div class="cloud-box">
+        <h2>AWS</h2>
+        <h3>STS Identity</h3>
+        <pre>{{ aws_info.sts_identity | tojson(indent=2) if aws_info.sts_identity is defined else "No data" }}</pre>
+        <h3>Configure List</h3>
+        <pre>{{ aws_info.configure_list if aws_info.configure_list is defined else "No data" }}</pre>
+        <a href="{{ url_for('reconfigure.aws_page') }}" class="btn">Change AWS Configuration </a>
+    </div>
+
+    <div class="cloud-box">
+        <h2>Azure</h2>
+        <pre>{{ azure_info | tojson(indent=2) if azure_info is defined else "No data" }}</pre>
+        <a href="{{ url_for('reconfigure.azure_page') }}" class="btn">Change AZURE Configuration</a>
+    </div>
+
+    <div class="cloud-box">
+        <h2>GCP</h2>
+        <h3>Auth List</h3>
+        <pre>{{ gcp_info.auth_list | tojson(indent=2) if gcp_info.auth_list is defined else "No data" }}</pre>
+        <h3>Config List</h3>
+        <pre>{{ gcp_info.config_list | tojson(indent=2) if gcp_info.config_list is defined else "No data" }}</pre>
+
+    </div>
+
+</body>
+</html>

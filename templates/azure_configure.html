@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Azure Credentials</title>
+  </head>
+  <body>
+    <h2>Enter Azure Credentials</h2>
+    <form method="POST" action="{{ url_for('reconfigure.azure_save_data') }}">
+      <label for="AZURE_CLIENT_ID">AZURE_CLIENT_ID:</label><br />
+      <input
+        type="text"
+        id="AZURE_CLIENT_ID"
+        name="AZURE_CLIENT_ID"
+        required
+      /><br /><br />
+
+      <label for="AZURE_SECRET">AZURE_SECRET:</label><br />
+      <input
+        type="password"
+        id="AZURE_SECRET"
+        name="AZURE_SECRET"
+        required
+      /><br /><br />
+
+      <label for="AZURE_TENANT_ID">AZURE_TENANT_ID:</label><br />
+      <input
+        type="text"
+        id="AZURE_TENANT_ID"
+        name="AZURE_TENANT_ID"
+        required
+      /><br /><br />
+
+      <label for="AZURE_SUBSCRIPTION_ID">AZURE_SUBSCRIPTION_ID:</label><br />
+      <input
+        type="text"
+        id="AZURE_SUBSCRIPTION_ID"
+        name="AZURE_SUBSCRIPTION_ID"
+        required
+      /><br /><br />
+
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>

@@ -5,41 +5,41 @@ import tempfile
 import json
 from extensions import mongo
 
-def fun_flaskonly_v1(session_name, dockerfile_path, image_name, terraform_dir, port_no, aws_region,cleanup_on_failure=True):
+def fun_flaskonly_v1(username, dockerfile_path, image_name, terraform_dir, port_no, aws_region, cleanup_on_failure=True):
 
     # IMPORTANT: Make sure port_no is an integer
     port_no = int(port_no)
     
-    print(f"Starting deployment in tmux session: {session_name}")
+    print(f"Starting deployment in tmux session: {username}")
     print(f"Container will expose port: {port_no}")
     
-    # Ensure tmux session exists
-    if not _ensure_tmux_session(session_name):
-        return {"status": "error", "message": "Failed to create tmux session"}
+    # Create new tmux session with aws environment
+    if not _create_tmux_session_with_aws(username):
+        return {"status": "error", "message": "Failed to create tmux session with AWS environment"}
     
     # Create temporary build script
     build_script = _create_build_script(aws_region)
     
     try:
         # Step 1: Build Docker image and push to ECR
-        if not _build_docker_image(session_name, dockerfile_path, image_name, build_script, aws_region):
+        if not _build_docker_image(username, dockerfile_path, image_name, build_script, aws_region):
           if cleanup_on_failure:
                 print("Build failed. Cleaning up any created resources...")
-                # cleanup_terraform_and_ecr(session_name, terraform_dir, image_name, aws_region)
+                # cleanup_terraform_and_ecr(username, terraform_dir, image_name, aws_region)
           return {"status": "error", "message": "Docker build failed"}
         
         # Step 2: Deploy with Terraform
         print("Docker build successful. Deploying with Terraform...")
-        endpoint_url = _deploy_terraform(session_name, terraform_dir, image_name, port_no, aws_region)
+        endpoint_url = _deploy_terraform(username, terraform_dir, image_name, port_no, aws_region)
         
         if not endpoint_url:
           if cleanup_on_failure:
               print("Deployment failed. Cleaning up created resources...")
-              # cleanup_terraform_and_ecr(session_name, terraform_dir, image_name, aws_region)
+              # cleanup_terraform_and_ecr(username, terraform_dir, image_name, aws_region)
           return {"status": "error", "message": "Terraform deployment failed"}
         
         change_dir = '''cd ../../../../'''
-        _run_in_tmux(session_name, change_dir)
+        _run_in_tmux(username, change_dir)
 
         print(f"Deployment successful! Endpoint URL: {endpoint_url}")
         return {
@@ -53,22 +53,33 @@ def fun_flaskonly_v1(session_name, dockerfile_path, image_name, terraform_dir, p
         if os.path.exists(build_script):
             os.remove(build_script)
 
-def _ensure_tmux_session(session_name):
-    """Ensure the tmux session exists, create if it doesn't"""
+def _create_tmux_session_with_aws(username):
+    """Create a new tmux session with AWS environment sourced"""
     try:
-        # Check if session exists
-        check_cmd = f"tmux has-session -t {session_name} 2>/dev/null"
+        # Kill existing session if it exists
+        kill_cmd = f"tmux kill-session -t {username} 2>/dev/null || true"
+        subprocess.run(kill_cmd, shell=True)
+        
+        # Create new session with AWS environment
+        create_cmd = f'tmux new -d -s "{username}" "source download/abc/aws; bash"'
+        subprocess.run(create_cmd, shell=True, check=True)
+        
+        # Give it a moment to initialize
+        time.sleep(2)
+        
+        # Verify session was created
+        check_cmd = f"tmux has-session -t {username} 2>/dev/null"
         session_exists = subprocess.run(check_cmd, shell=True).returncode == 0
         
-        if not session_exists:
-            # Create new session
-            create_cmd = f"tmux new-session -d -s {session_name}"
-            subprocess.run(create_cmd, shell=True, check=True)
-            time.sleep(1)  # Brief pause to ensure session is ready
-        
-        return True
+        if session_exists:
+            print(f"Successfully created tmux session '{username}' with AWS environment")
+            return True
+        else:
+            print(f"Failed to verify tmux session '{username}'")
+            return False
+            
     except subprocess.CalledProcessError as e:
-        print(f"Error with tmux session: {e}")
+        print(f"Error creating tmux session with AWS environment: {e}")
         return False
 
 def _create_build_script(aws_region):
@@ -96,7 +107,7 @@ echo "BUILD_COMPLETE"
     os.chmod(script_path, 0o755)
     return script_path
 
-def _run_in_tmux(session_name, command, wait_for_output=False, output_file=None):
+def _run_in_tmux(username, command, wait_for_output=False, output_file=None):
     """Run a command in the tmux session and optionally wait for output"""
     try:
         # Clear any previous output if we're capturing
@@ -105,7 +116,7 @@ def _run_in_tmux(session_name, command, wait_for_output=False, output_file=None)
                 os.remove(output_file)
                 
         # Run command in session
-        run_cmd = f'tmux send-keys -t {session_name} "{command}" C-m'
+        run_cmd = f'tmux send-keys -t {username} "{command}" C-m'
         subprocess.run(run_cmd, shell=True, check=True)
         
         # If we need to wait for output
@@ -128,7 +139,7 @@ def _run_in_tmux(session_name, command, wait_for_output=False, output_file=None)
         print(f"Error running command in tmux: {e}")
         return None
 
-def _build_docker_image(session_name, dockerfile_path, image_name, build_script, aws_region):
+def _build_docker_image(username, dockerfile_path, image_name, build_script, aws_region):
     """Build Docker image in tmux session and push to ECR"""
     print(f"Building Docker image '{image_name}' from {dockerfile_path}")
     
@@ -137,14 +148,14 @@ def _build_docker_image(session_name, dockerfile_path, image_name, build_script,
     
     # Build Docker image
     build_cmd = f"{build_script} '{dockerfile_path}' '{image_name}' '{aws_region}' > {output_file} 2>&1"
-    _run_in_tmux(session_name, build_cmd)
+    _run_in_tmux(username, build_cmd)
     
     # Wait for a moment to ensure build completes
     time.sleep(5)
     
     # Verify the image exists
     verify_cmd = f"docker image ls {image_name} --format '{{{{.Repository}}}}' | grep -q '{image_name}' && echo 'BUILD_SUCCESS' > {output_file}"
-    _run_in_tmux(session_name, verify_cmd)
+    _run_in_tmux(username, verify_cmd)
     
     # Wait for verification
     time.sleep(2)
@@ -197,7 +208,7 @@ echo "ECR_PUSH_SUCCESS"
                 
                 # Run the script
                 push_cmd = f"{push_script} > {output_file} 2>&1"
-                _run_in_tmux(session_name, push_cmd)
+                _run_in_tmux(username, push_cmd)
                 
                 time.sleep(2)
                 # Wait for script to complete
@@ -218,7 +229,7 @@ echo "ECR_PUSH_SUCCESS"
     print("Docker build or push failed or timed out")
     return False
 
-def _deploy_terraform(session_name, terraform_dir, image_name, port_no, aws_region):
+def _deploy_terraform(username, terraform_dir, image_name, port_no, aws_region):
     """Deploy with Terraform in tmux session"""
     print(f"Deploying infrastructure with Terraform from {terraform_dir} for port {port_no}")
     
@@ -228,16 +239,21 @@ def _deploy_terraform(session_name, terraform_dir, image_name, port_no, aws_regi
     # Always recreate Terraform files to ensure correct format
     _create_terraform_files(terraform_dir, aws_region, True)
     
-    # Initialize and apply Terraform - pass port as number
+    # Create terraform.tfvars file with the values
+    tfvars_path = os.path.join(terraform_dir, 'terraform.tfvars')
+    with open(tfvars_path, 'w') as f:
+        f.write(f'''aws_region = "{aws_region}"
+image_name = "{image_name}"
+container_port = {port_no}
+''')
+    
+    # Initialize and apply Terraform - no need for environment variables now
     terraform_cmd = f"""cd {terraform_dir} && \
-    export TF_VAR_image_name='{image_name}' && \
-    export TF_VAR_aws_region='{aws_region}' && \
-    export TF_VAR_container_port={port_no} && \
     terraform init && \
     terraform apply -auto-approve && \
     terraform output -raw load_balancer_url > {output_file}"""
     
-    _run_in_tmux(session_name, terraform_cmd, wait_for_output=True, output_file=output_file)
+    _run_in_tmux(username, terraform_cmd, wait_for_output=True, output_file=output_file)
     
     # Check for Terraform output
     if os.path.exists(output_file):
@@ -561,19 +577,30 @@ output "load_balancer_url" {
   value = "http://${aws_lb.app_lb.dns_name}"
 }''')
 
-def cleanup_terraform_and_ecr(session_name, terraform_dir, image_name, aws_region="us-east-1"):
-
-    print(f"Starting destruction of deployment in tmux session: {session_name}")
-    print("10 sec timmer start")
+def cleanup_terraform_and_ecr(username, terraform_dir, image_name, aws_region="us-east-1"):
+    print(f"Starting destruction of deployment in tmux session: {username}")
+    print("10 sec timer start")
     time.sleep(10)
-    # Ensure tmux session exists
-    if not _ensure_tmux_session(session_name):
-        return {"status": "error", "message": "Failed to create tmux session"}
+    
+    # Create new tmux session with AWS environment for cleanup
+    if not _create_tmux_session_with_aws(username):
+        return {"status": "error", "message": "Failed to create tmux session with AWS environment for cleanup"}
     
     # Create temp output file for tracking progress
     output_file = tempfile.mktemp()
     
-    # Step 1: Destroy Terraform resources
+    # Step 1: Ensure terraform.tfvars exists with correct values
+    tfvars_path = os.path.join(terraform_dir, 'terraform.tfvars')
+    if not os.path.exists(tfvars_path):
+        # Create terraform.tfvars file if it doesn't exist
+        with open(tfvars_path, 'w') as f:
+            f.write(f'''aws_region = "{aws_region}"
+image_name = "{image_name}"
+container_port = 8080
+''')
+        print("Created terraform.tfvars file for destroy operation")
+    
+    # Step 2: Destroy Terraform resources
     print("Destroying Terraform resources...")
     print(terraform_dir)
     
@@ -583,9 +610,8 @@ def cleanup_terraform_and_ecr(session_name, terraform_dir, image_name, aws_regio
     echo "TERRAFORM_DESTROY_COMPLETE" > {output_file}
     """
     
-    _run_in_tmux(session_name, terraform_destroy_cmd)
+    _run_in_tmux(username, terraform_destroy_cmd)
     
-
     max_wait_time = 1000  # 16 approx minutes
     start_time = time.time()
     terraform_destroyed = False
@@ -612,7 +638,7 @@ def cleanup_terraform_and_ecr(session_name, terraform_dir, image_name, aws_regio
     echo "ECR_DELETE_COMPLETE" > {output_file}
     """
     
-    _run_in_tmux(session_name, delete_ecr_cmd)
+    _run_in_tmux(username, delete_ecr_cmd)
     
     # Wait for ECR deletion to complete
     ecr_start_time = time.time()
@@ -629,17 +655,21 @@ def cleanup_terraform_and_ecr(session_name, terraform_dir, image_name, aws_regio
         time.sleep(2)
     
     if ecr_deleted:
+        # Clean up terraform.tfvars file after successful destroy
+        if os.path.exists(tfvars_path):
+            os.remove(tfvars_path)
+            
         mongo.db.users.update_one(
-                  { "username": session_name },  
-                  {
-                      "$set": {
-                          f"projects.{image_name}.exposed_port": "",
-                          f"projects.{image_name}.endpoint_url": ""
-                      }
-                  }
-              )
+            { "username": username },  
+            {
+                "$set": {
+                    f"projects.{image_name}.exposed_port": "",
+                    f"projects.{image_name}.endpoint_url": ""
+                }
+            }
+        )
         change_dir = '''cd ../../../../'''
-        _run_in_tmux(session_name, change_dir)
+        _run_in_tmux(username, change_dir)
         return {
             "status": "success",
             "message": "All resources successfully destroyed",
