@@ -3,8 +3,20 @@ import boto3
 import json
 from flask import session  # Import session to access stored variables
 import subprocess
+import os
 
 def create_session(username,aws_access_key,aws_secret_key):
+    region = "us-east-1"
+    cloud_name = "aws"
+    
+    if cloud_name == "aws":
+        save_file_aws(username,aws_access_key,aws_secret_key,region,cloud_name)
+    elif cloud_name == "azure":
+        save_file_azure(username,aws_access_key,aws_secret_key,region,cloud_name)
+    elif cloud_name == "gcp":
+        save_file_gcp(username,aws_access_key,aws_secret_key,region,cloud_name)
+    else:
+        print("no cloud in list")
 
     session_name = username  # Use the username as the tmux session name
     # Create a new tmux session in detached mode
@@ -34,73 +46,57 @@ def create_session(username,aws_access_key,aws_secret_key):
         return f"Error: {e}"
     
     
-    
+def save_file_aws(username, aws_access_key, aws_secret_key, region, cloud_name):
+    # Directory path for user
+    file_dir = f"download/{username}/"
+    os.makedirs(file_dir, exist_ok=True)
 
-    
-    
-    
-def aws_secrets_store(secret_name, username, password):
-    client = boto3.client('secretsmanager', region_name='ap-south-1')
-    
-    try:
-        # Get the session variable (Assuming it's already stored)
-        # session_variable = session.get("user")  # Change "user_role" if needed
-        session_variable = "vasu"
+    # ✅ Final path = directory + cloud_name (keeps your filename)
+    file_path = os.path.join(file_dir, cloud_name)
 
-        if not session_variable:
-            return "Error: Session variable not found!"
+    content = f"""export AWS_ACCESS_KEY_ID="{aws_access_key}"
+export AWS_SECRET_ACCESS_KEY="{aws_secret_key}"
+export AWS_DEFAULT_REGION="{region}"
+"""
 
-        # Try to get the existing secret
-        try:
-            existing_secret = client.get_secret_value(SecretId=secret_name)
-            secret_data = json.loads(existing_secret['SecretString'])  
-        except client.exceptions.ResourceNotFoundException:
-            # If secret doesn't exist, create an empty dictionary
-            secret_data = {}
+    with open(file_path, "w") as f:
+        f.write(content)
 
-        # Store credentials using session variable value
-        secret_data[f"{session_variable}-username"] = username
-        secret_data[f"{session_variable}-password"] = password
+    return f"Credentials saved to {file_path}"
 
-        # Store the updated secret (use update_secret instead of put_secret_value)
-        client.update_secret(
-            SecretId=secret_name,
-            SecretString=json.dumps(secret_data)
-        )
-        
-        return f"Credentials stored successfully for session {session_variable}!"
+def save_file_azure(username, aws_access_key, aws_secret_key, region, cloud_name):
+    # Directory path for user
+    file_dir = f"download/{username}/"
+    os.makedirs(file_dir, exist_ok=True)
 
-    except client.exceptions.ResourceNotFoundException:
-        # If secret doesn't exist, create it first
-        client.create_secret(
-            Name=secret_name,
-            SecretString=json.dumps({
-                f"{session_variable}-username": username,
-                f"{session_variable}-password": password
-            })
-        )
-        return f"New secret created and credentials stored for session {session_variable}!"
+    # ✅ Final path = directory + cloud_name (keeps your filename)
+    file_path = os.path.join(file_dir, cloud_name)
 
-    except Exception as e:
-        return f"Error: {e}"
+    content = f"""export AZURE_CLIENT_ID="{your_client_id}"
+export AZURE_SECRET="{your_client_secret}"
+export AZURE_TENANT_ID="{your_tenant_id}"
+export AZURE_SUBSCRIPTION_ID="{your_subscription_id}"
+"""
 
+    with open(file_path, "w") as f:
+        f.write(content)
 
+    return f"Credentials saved to {file_path}"
 
+def save_file_gcp(username, aws_access_key, aws_secret_key, region, cloud_name):
+    # Directory path for user
+    file_dir = f"download/{username}/"
+    os.makedirs(file_dir, exist_ok=True)
 
-def aws_secrets_get(secret_name, username):
-    client = boto3.client('secretsmanager', region_name='ap-south-1')  
-    
-    try:
-        # Retrieve the secret
-        response = client.get_secret_value(SecretId=secret_name)
-        secret_data = json.loads(response['SecretString'])  # Convert JSON string to dict
-        
-        # Get the password for the given username
-        return secret_data.get(username, "User not found!")  # Return password or error message
+    # ✅ Final path = directory + cloud_name (keeps your filename)
+    file_path = os.path.join(file_dir, cloud_name)
 
-    except client.exceptions.ResourceNotFoundException:
-        return "Secret not found!"
-    except Exception as e:
-        return f"Error: {e}"
+    content = f"""export AWS_ACCESS_KEY_ID="{aws_access_key}"
+export AWS_SECRET_ACCESS_KEY="{aws_secret_key}"
+export AWS_DEFAULT_REGION="{region}"
+"""
 
-# print(aws_secrets_get("InstantHost", "john_doe"))  # Output: myp@ssword123
+    with open(file_path, "w") as f:
+        f.write(content)
+
+    return f"Credentials saved to {file_path}"
