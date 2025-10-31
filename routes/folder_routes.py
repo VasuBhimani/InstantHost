@@ -7,7 +7,7 @@ import os
 import shutil
 import stat
 from extensions import mongo
-from utils.flaskonly_v1 import cleanup_terraform_and_ecr
+from utils.flaskonly_aws import cleanup_terraform_and_ecr
 
 folder_bp = Blueprint("folder", __name__)
 

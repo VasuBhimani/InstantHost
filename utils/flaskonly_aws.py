@@ -1,3 +1,4 @@
+
 import subprocess
 import time
 import os
@@ -5,7 +6,7 @@ import tempfile
 import json
 from extensions import mongo
 
-def fun_flaskonly_v1(username, dockerfile_path, image_name, terraform_dir, port_no, aws_region, cleanup_on_failure=True):
+def flaskonly_aws(username, dockerfile_path, image_name, terraform_dir, port_no, aws_region, cleanup_on_failure=True):
 
     # IMPORTANT: Make sure port_no is an integer
     port_no = int(port_no)

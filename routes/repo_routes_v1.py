@@ -12,17 +12,28 @@ repo_bp_v1 = Blueprint("repo_v1", __name__)
 @repo_bp_v1.route("/url_form", methods=["GET", "POST"])
 def url_form():
     global repo_name
+    cloud = "cloud is not selected"
     username = session["user"] 
     if request.method == "POST":
         
+        action = request.form.get("action")
+
+        if action == "submit1":
+            cloud = "aws"
+        elif action == "submit2":
+            cloud = "azure"
+        elif action == "submit3":
+            cloud = "gcp"
+        print(cloud)
         
         github_url = request.form.get("github_url")
         if github_url:
             try:
                 repo_name = github_url.rstrip('/').split('/')[-1].replace('.git', '')
-                folder_path = os.path.join("download", username, repo_name)
+                repo_name_cloud = repo_name + "-" +cloud
+                folder_path = os.path.join("download", username, repo_name_cloud)
                 os.makedirs(folder_path, exist_ok=True)
-                repo_path = os.path.join(folder_path, repo_name)
+                repo_path = os.path.join(folder_path, repo_name_cloud)
 
                 if not os.path.exists(repo_path):
                     # Clone the repository
@@ -46,7 +57,7 @@ def url_form():
                                                         }
                                                     }
                                                 )
-                            return redirect(url_for("flask_v1_bp.flask_v1") + f"?dockerfile_path={dockerfile_path}&repo_name={repo_name}&exposed_port={exposed_port}")
+                            return redirect(url_for("flask_v1_bp.flask_v1") + f"?dockerfile_path={dockerfile_path}&repo_name={repo_name}&exposed_port={exposed_port}&cloud={cloud}")
                         else:
                             flash(f"Dockerfile found at: {dockerfile_path}, but no port is exposed.", "warning")
                             print(f"Dockerfile found at: {dockerfile_path}, but no port is exposed.")

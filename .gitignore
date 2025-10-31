@@ -16,3 +16,4 @@ script/ECR/*
 !script/ECR/main.tf
 !script/ECR/outputs.tf  
 !script/ECR/push_to_ecr.sh
+test.

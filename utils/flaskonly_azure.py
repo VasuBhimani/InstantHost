@@ -1,3 +1,9 @@
+# add this command in script
+# az provider register --namespace Microsoft.ContainerRegistry
+# az provider register --namespace Microsoft.ContainerInstance
+# az provider register --namespace Microsoft.Network
+# az provider register --namespace Microsoft.Resources
+
 import subprocess
 import time
 import os
@@ -5,7 +11,7 @@ import tempfile
 import json
 from extensions import mongo
 
-def fun_flaskonly_v1_azure(username, dockerfile_path, image_name, terraform_dir, port_no, azure_region, cleanup_on_failure=True):
+def flaskonly_azure(username, dockerfile_path, image_name, terraform_dir, port_no, azure_region, cleanup_on_failure=True):
     
     # IMPORTANT: Make sure port_no is an integer
     port_no = int(port_no)
@@ -143,30 +149,57 @@ def _build_docker_image_azure(username, dockerfile_path, image_name, build_scrip
     """Build Docker image in tmux session and push to ACR"""
     print(f"Building Docker image '{image_name}' from {dockerfile_path}")
     
-    # Create temp output file
-    output_file = tempfile.mktemp()
+    # Create temp output files - separate files for build and verification
+    build_output_file = tempfile.mktemp(suffix='_build.txt')
+    verify_output_file = tempfile.mktemp(suffix='_verify.txt')
     
     # Build Docker image
-    build_cmd = f"{build_script} '{dockerfile_path}' '{image_name}' '{azure_region}' > {output_file} 2>&1"
+    build_cmd = f"{build_script} '{dockerfile_path}' '{image_name}' '{azure_region}' > {build_output_file} 2>&1; echo $? > {build_output_file}.status"
     _run_in_tmux(username, build_cmd)
     
-    # Wait for a moment to ensure build completes
-    time.sleep(5)
+    # Wait for build to complete by checking the status file
+    max_build_wait = 600  # 10 minutes for build
+    build_start = time.time()
+    build_success = False
+    
+    while time.time() - build_start < max_build_wait:
+        status_file = f"{build_output_file}.status"
+        if os.path.exists(status_file):
+            with open(status_file, 'r') as f:
+                exit_code = f.read().strip()
+                if exit_code == '0':
+                    print("Docker build completed successfully")
+                    build_success = True
+                    break
+                elif exit_code:  # Non-zero exit code
+                    print(f"Docker build failed with exit code: {exit_code}")
+                    if os.path.exists(build_output_file):
+                        with open(build_output_file, 'r') as f:
+                            print(f"Build output: {f.read()}")
+                    return False
+        time.sleep(3)
+    
+    if not build_success:
+        print("Docker build timed out")
+        return False
     
     # Verify the image exists
-    verify_cmd = f"docker image ls {image_name} --format '{{{{.Repository}}}}' | grep -q '{image_name}' && echo 'BUILD_SUCCESS' > {output_file}"
+    verify_cmd = f"docker image ls {image_name} --format '{{{{.Repository}}}}' | grep -q '{image_name}' && echo 'BUILD_SUCCESS' > {verify_output_file} || echo 'BUILD_FAILED' > {verify_output_file}"
     _run_in_tmux(username, verify_cmd)
     
     # Wait for verification
-    time.sleep(2)
+    time.sleep(3)
     
-    # Check if build succeeded
-    if os.path.exists(output_file):
-        with open(output_file, 'r') as f:
-            content = f.read()
+    # Check if verification succeeded
+    if os.path.exists(verify_output_file):
+        with open(verify_output_file, 'r') as f:
+            content = f.read().strip()
             if 'BUILD_SUCCESS' in content:
-                # Push to ACR - using a more reliable command structure
+                print("Docker image verified successfully")
+                # Now push to ACR
+                push_output_file = tempfile.mktemp(suffix='_push.txt')
                 push_script = tempfile.mktemp(suffix='.sh')
+                
                 with open(push_script, 'w') as f:
                     f.write(f"""#!/bin/bash
 set -e
@@ -192,7 +225,7 @@ az group create --name $RESOURCE_GROUP --location {azure_region}
 echo "Creating ACR if it doesn't exist"
 if ! az acr show --name $ACR_NAME --resource-group $RESOURCE_GROUP 2>/dev/null; then
     echo "Creating ACR: $ACR_NAME"
-    az acr create --resource-group $RESOURCE_GROUP --name $ACR_NAME --sku Basic --location {azure_region}
+    az acr create --resource-group $RESOURCE_GROUP --name $ACR_NAME --sku Basic --location {azure_region} --admin-enabled true
 fi
 
 # Get ACR login server
@@ -213,32 +246,52 @@ echo "Pushing image: $ACR_IMAGE"
 docker push $ACR_IMAGE
 
 echo "ACR_PUSH_SUCCESS"
-echo "ACR_NAME=$ACR_NAME" >> {output_file}
-echo "RESOURCE_GROUP=$RESOURCE_GROUP" >> {output_file}
 """)
                 os.chmod(push_script, 0o755)
                 
-                # Run the script
-                push_cmd = f"{push_script} > {output_file} 2>&1"
+                # Run the push script with status tracking
+                push_cmd = f"{push_script} > {push_output_file} 2>&1; echo $? > {push_output_file}.status"
                 _run_in_tmux(username, push_cmd)
                 
-                time.sleep(2)
-                # Wait for script to complete
-                max_wait_time = 600  # 10 minutes
-                start_time = time.time()
-                while time.time() - start_time < max_wait_time:
-                    if os.path.exists(output_file):
-                        with open(output_file, 'r') as f:
-                            content = f.read()
-                            if 'ACR_PUSH_SUCCESS' in content:
-                                print("Successfully built and pushed image to ACR")
-                                # Clean up temp script
-                                if os.path.exists(push_script):
-                                    os.remove(push_script)
-                                return True
-                    time.sleep(2)
+                # Wait for push to complete
+                max_push_wait = 600  # 10 minutes for push
+                push_start = time.time()
+                
+                while time.time() - push_start < max_push_wait:
+                    status_file = f"{push_output_file}.status"
+                    if os.path.exists(status_file):
+                        with open(status_file, 'r') as f:
+                            exit_code = f.read().strip()
+                            if exit_code == '0':
+                                # Also check for success marker in output
+                                if os.path.exists(push_output_file):
+                                    with open(push_output_file, 'r') as f:
+                                        push_content = f.read()
+                                        if 'ACR_PUSH_SUCCESS' in push_content:
+                                            print("Successfully built and pushed image to ACR")
+                                            # Clean up temp files
+                                            for temp_file in [push_script, build_output_file, verify_output_file, push_output_file]:
+                                                if os.path.exists(temp_file):
+                                                    try:
+                                                        os.remove(temp_file)
+                                                    except:
+                                                        pass
+                                            return True
+                            elif exit_code:  # Non-zero exit code
+                                print(f"ACR push failed with exit code: {exit_code}")
+                                if os.path.exists(push_output_file):
+                                    with open(push_output_file, 'r') as f:
+                                        print(f"Push output: {f.read()}")
+                                return False
+                    time.sleep(5)
+                
+                print("ACR push timed out")
+                return False
+            else:
+                print(f"Docker image verification failed: {content}")
+                return False
     
-    print("Docker build or push failed or timed out")
+    print("Docker build verification failed")
     return False
 
 def _deploy_terraform_azure(username, terraform_dir, image_name, port_no, azure_region):
@@ -336,11 +389,12 @@ provider "azurerm" {
 # Get current subscription info
 data "azurerm_client_config" "current" {}
 
-# Create resource group
-resource "azurerm_resource_group" "main" {
-  name     = "${var.image_name}-rg"
-  location = var.azure_region
+
+# Use existing resource group
+data "azurerm_resource_group" "existing" {
+  name = "${var.image_name}-rg"
 }
+
 
 # Create ACR name (must be globally unique)
 locals {
@@ -351,22 +405,23 @@ locals {
 # Get existing ACR (created during image push)
 data "azurerm_container_registry" "main" {
   name                = local.acr_name_clean
-  resource_group_name = azurerm_resource_group.main.name
-  depends_on         = [azurerm_resource_group.main]
+  resource_group_name = data.azurerm_resource_group.existing.name
+  depends_on         = [data.azurerm_resource_group.existing]
 }
 
 # Create virtual network
 resource "azurerm_virtual_network" "main" {
   name                = "${var.image_name}-vnet"
   address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location = data.azurerm_resource_group.existing.location
+  resource_group_name = data.azurerm_resource_group.existing.name
+
 }
 
 # Create subnet
 resource "azurerm_subnet" "main" {
   name                 = "${var.image_name}-subnet"
-  resource_group_name  = azurerm_resource_group.main.name
+  resource_group_name = data.azurerm_resource_group.existing.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = ["10.0.1.0/24"]
   
@@ -383,8 +438,8 @@ resource "azurerm_subnet" "main" {
 resource "azurerm_public_ip" "main" {
   count               = var.container_count
   name                = "${var.image_name}-pip-${count.index}"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location            = data.azurerm_resource_group.existing.location
+  resource_group_name = data.azurerm_resource_group.existing.name
   allocation_method   = "Static"
   sku                 = "Standard"
 }
@@ -393,12 +448,11 @@ resource "azurerm_public_ip" "main" {
 resource "azurerm_container_group" "main" {
   count               = var.container_count
   name                = "${var.image_name}-aci-${count.index}"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location            = data.azurerm_resource_group.existing.location
+  resource_group_name = data.azurerm_resource_group.existing.name
   ip_address_type     = "Public"
   dns_name_label      = "${var.image_name}-${count.index}-${random_string.dns_suffix.result}"
   os_type             = "Linux"
-  subnet_ids          = [azurerm_subnet.main.id]
 
   container {
     name   = var.image_name
@@ -429,23 +483,24 @@ resource "random_string" "dns_suffix" {
 # Application Gateway for load balancing
 resource "azurerm_subnet" "gateway" {
   name                 = "${var.image_name}-gateway-subnet"
-  resource_group_name  = azurerm_resource_group.main.name
+  resource_group_name = data.azurerm_resource_group.existing.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = ["10.0.2.0/24"]
 }
 
 resource "azurerm_public_ip" "gateway" {
   name                = "${var.image_name}-gateway-pip"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location = data.azurerm_resource_group.existing.location
+  resource_group_name = data.azurerm_resource_group.existing.name
   allocation_method   = "Static"
   sku                 = "Standard"
 }
 
 resource "azurerm_application_gateway" "main" {
   name                = "${var.image_name}-appgw"
-  resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
+  resource_group_name = data.azurerm_resource_group.existing.name
+  location = data.azurerm_resource_group.existing.location
+
 
   sku {
     name     = "Standard_v2"
@@ -497,6 +552,14 @@ resource "azurerm_application_gateway" "main" {
     backend_http_settings_name = "backend-http-settings"
     priority                   = 1
   }
+  
+  ssl_policy {
+    policy_type          = "Predefined"
+    policy_name          = "AppGwSslPolicy20220101" # Supports TLS 1.2+ only
+    min_protocol_version = "TLSv1_2"
+  }
+
+  depends_on = [azurerm_public_ip.gateway]
 }
 
 # Output
